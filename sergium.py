@@ -45,7 +45,7 @@ flag_entrada = False
 # ==================================================================================================
 
 def criar_interface():
-    global root                                                                                             # Interface gráfica  
+    global root                                                                                             # Interface gráfica
     global tabela_registradores, tabela_memoria, registradores_ids, memoria_ids                             # Tabelas
     global botao_selecionar_arquivo, botao_simular, botao_simular_parcial, botao_processar, botao_reiniciar # Botoes
     global text_box, log_text, entry_numero, text_saida                                                     # Caixas de texto
