@@ -311,7 +311,7 @@ def selecionar_arquivo():
             text_box.config(state=tk.DISABLED)  # Desabilita a escrita na caixa de texto 
 
             # Este simulador considera que cada instrucao presente no arquivo TXT possui o seguinte formato:
-            #   rotulo | mnemonico | operando 
+            #       rotulo | mnemonico | operando 
             #       Ex: inicio | SOM AC+VAL => AC | 10
             # O rótulo pode estar vazio, fazendo com que o seja atribuido o índice da instrução como seu valor
             i = 0

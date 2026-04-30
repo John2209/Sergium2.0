@@ -6,5 +6,10 @@ class Parser:
 
     def parsear(self):                  ## Função para realizar o parsing do arquivo
 
-        pass
+        conteudo = open(self.caminho_arquivo, 'r')  # abre o arquivo no caminho no modo read
+        conteudo.read()                             # tranforma todo o conteúdo do arquivo em uma string
+
+
+
+
         return self.instrucoes
