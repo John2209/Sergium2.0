@@ -32,6 +32,7 @@ class Parser:
         return self.instrucoes
 
 ## PARA TESTES ##
-parser = Parser(r"C:\dev\mSergium\codigos\EX3.txt")
-resultado = parser.parsear()
-print(resultado)
+if __name__ == "__main__":
+    parser = Parser(r"C:\dev\melhoriasSergium\codigos\EX4.txt")
+    resultado = parser.parsear()
+    print(resultado)
