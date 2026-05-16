@@ -32,7 +32,7 @@ class Parser:
         return self.instrucoes
 
 ## PARA TESTES ##
-if __name__ == "__main__":
+if __name__ == "__main__":      # executa apenas se leitor.py for executado como arquivo principal
     parser = Parser(r"C:\dev\melhoriasSergium\codigos\EX4.txt")
     resultado = parser.parsear()
     print(resultado)
