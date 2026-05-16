@@ -6,8 +6,11 @@ class Parser:
 
     def parsear(self):                  ## Função para realizar o parsing do arquivo
 
-        conteudo = open(self.caminho_arquivo, 'r')  # abre o arquivo no caminho no modo read
-        conteudo.read()                             # tranforma todo o conteúdo do arquivo em uma string
+        with open(self.caminho_arquivo, 'r') as file:                                       # abre o arquivo no caminho no modo read
+
+            conteudo = file.read()                                                          # tranforma todo o conteúdo do arquivo em uma string
+            conteudo = "\n".join(linha for linha in conteudo.splitlines() if "|" in linha)  # Remove as linhas em branco do conteúdo do arquivo
+
 
 
 
