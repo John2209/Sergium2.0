@@ -1,0 +1,8 @@
+ | ENT PORTA => AC | 0
+ | COP AC => AUX | 0
+ | ENT PORTA => AC | 0
+ | COP AC => AUX | 1
+ | COP AUX => AC | 0
+ | SUB AC - AUX => AC | 1
+ | SAI AC => PORTA | 2
+ | PARA | 0

@@ -1,0 +1,20 @@
+ | ENT PORTA => AC | 0
+ | COP AC => AUX | 0
+ | ENT PORTA => AC | 0
+ | COP AC => AUX | 1
+ | COP VAL => AC | 0
+ | COP AC => AUX | 2
+
+ loop | COP AUX => AC | 2
+ | SOM AC + AUX => AC | 0
+ | COP AC => AUX | 2
+
+ | COP AUX => AC | 1
+ | SUB AC - VAL => AC | 1
+ | COP AC => AUX | 1
+
+ | VAI SE P = 1 | loop
+
+ fim | COP AUX => AC | 2
+ | SAI AC => PORTA | 2
+ | PARA | 0

@@ -1,0 +1,5 @@
+ | COP VAL => AC | 10
+ | SUB AC - VAL => AC | 10
+ | SOM AC + VAL => AC | 5
+ | SUB AC - VAL => AC | 8
+ | PARA | 0
