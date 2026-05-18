@@ -10,7 +10,7 @@ class Parser:
             conteudo = arquivo.read()                       # tranforma o conteúdo do arquivo em uma string. conteudo passa a ser string
             linhas = conteudo.splitlines()                  # trasfomar a string em uma lista de strings, cada uma representando uma linha do arquivo
 
-            linhas_validas = []  # lista de linhas válidas do codigo
+            linhas_validas = []  # lista de linhas válidas do código
 
             # todo: juntar os dois for em um
             for linha in linhas:                    # para cada linha em linhas
@@ -21,7 +21,7 @@ class Parser:
                 partes = linha.split('|')                   # .split() retorna uma lista
 
                 rotulo = partes[0].strip().upper()      # transforma o elemento 0 da lista em rotulo, deixa em maiúsculo e retira os espaços
-                mnemonico = partes[1].strip().upper()   # transforma o elemento 1 da lista em menemônico, deixa em maiúsculo e retira os espaços
+                mnemonico = partes[1].strip().upper()   # transforma o elemento 1 da lista em mnemônico, deixa em maiúsculo e retira os espaços
                 operando = partes[2].strip().upper()    # transforma o elemento 2 da lista em operando, deixa em maiúsculo e retira os espaços
 
                 if rotulo == "":        # se não houver rótulo,
@@ -33,6 +33,6 @@ class Parser:
 
 ## PARA TESTES ##
 if __name__ == "__main__":      # executa apenas se leitor.py for executado como arquivo principal
-    parser = Parser(r"C:\dev\melhoriasSergium\codigos\EX4.txt")
+    parser = Parser(r"C:\dev\mSergium\codigos\pTestCompleto.txt")
     resultado = parser.parsear()
     print(resultado)
