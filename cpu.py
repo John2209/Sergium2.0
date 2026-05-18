@@ -7,6 +7,7 @@ class CPU:
         self.mem = [0] * 256            # memória principal
         self.instrucoes = {}            # dicionário de instruções
         self.entrada = 0                # valor de entrada fornecido externamente (I/O)
+        self.saida = None               # valor de saida do Sergium
         self.flag_entrada = False       # indica se há um valor de entrada aguardando leitura
         self.ac = 0                     # acumulador
         self.z = 0                      # 1 se o último resultado aritmético foi zero
@@ -22,14 +23,14 @@ class CPU:
         self.p = 1 if self.ac > 0 else 0       # se ac > 0, P = 1
 
     def executar_instrucao(self):      ## executa uma instrução
-        chaves = list(self.instrucoes.keys())        # define chaves como uma lista com as chaves do dicionário instrucoes
+        chaves = list(self.instrucoes.keys())        # transforma as chaves do dicionário em uma lista ordenada
 
         if self.pc >= len(chaves):      # se o pc for maior ou igual ao número de chaves
             return True     # o programa acabou
 
         chave_atual = chaves[self.pc]       # chave da instrução atual
-        mnemonico = self.instrucoes[chave_atual][0]     # mnemônico é a chave 0
-        operando = self.instrucoes[chave_atual][1]      # instrucoes é a chave 1
+        mnemonico = self.instrucoes[chave_atual][0]     # primeiro ítem da tupla: mnemonico
+        operando = self.instrucoes[chave_atual][1]      # segundo ítem da tupla: operando
 
         # todo: fazer um dispatch table
         # operando vem como string
@@ -71,12 +72,15 @@ class CPU:
             self.ac = self.ac - self.auxs[int(operando)]
             self.atualizar_flags()
 
-        # ======================
-        # OPERAÇÕES CONDICIONAIS
-        # ======================
+        # ====================
+        # OPERAÇÕES DE DESVIO
+        # ====================
+
+        # .index() retorna o índice da primeira ocorrência
+        # todo: substituir busca sequencial em chaves por dicionário de rótulos para índices
         elif mnemonico == "VAI":
             if operando in chaves:                  # se o operando (rótulo) estiver em chaves
-                self.pc = chaves.index(operando)    # pc aponta para ele. .index() retorna o índice da primeira ocorrência
+                self.pc = chaves.index(operando)    # pc aponta para ele
                 return False                        # o programa não acabou
             else:
                 raise Exception(f"Rótulo inválido: {operando}")
@@ -97,11 +101,14 @@ class CPU:
                 else:
                     raise Exception(f"Rótulo inválido: {operando}")
 
-        # todo
         # =============================
         # OPERAÇÕES DE ENTRADA E SAÍDA
         # =============================
+        elif mnemonico == "ENT PORTA => AC":
+            self.ac = self.entrada
 
+        elif mnemonico == "SAI AC => PORTA":
+            self.saida = self.ac
 
         # =============================
         # OPERAÇÕES INCONDICIONAIS
