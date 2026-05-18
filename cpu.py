@@ -105,13 +105,9 @@ class CPU:
         # OPERAÇÕES DE ENTRADA E SAÍDA
         # =============================
         elif mnemonico == "ENT PORTA => AC":
-            if operando != "0":
-                raise ValueError(f"Porta de entrada inválida: {operando}. Use porta 0.")
             self.ac = self.entrada
 
         elif mnemonico == "SAI AC => PORTA":
-            if operando != "2":
-                raise ValueError(f"Porta de saída inválida: {operando}. Use porta 2.")
             self.saida = self.ac
 
         # =============================
