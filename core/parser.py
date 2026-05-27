@@ -1,3 +1,5 @@
+# Lê arquivos de código Sergium e transforma o texto em instruções iterpretáveis pela CPU
+
 class Parser:
     def __init__(self, caminho_arquivo: str):       ## Inicializa o parser com o caminho do arquivo
 
@@ -32,7 +34,7 @@ class Parser:
         return self.instrucoes
 
 ## PARA TESTES ##
-if __name__ == "__main__":      # executa apenas se leitor.py for executado como arquivo principal
+if __name__ == "__main__":      # executa apenas se parser.py for executado como arquivo principal
     parser = Parser(r"C:\dev\mSergium\codigos\pTestCompleto.txt")
     resultado = parser.parsear()
     print(resultado)

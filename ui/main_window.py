@@ -1,0 +1,1 @@
+# Define o painel do terminal

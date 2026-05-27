@@ -1,0 +1,1 @@
+# Pacote com a lógica principal do simulador Sergium.
