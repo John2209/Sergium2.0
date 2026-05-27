@@ -25,9 +25,10 @@ class App(tk.Tk):
         self.grid_columnconfigure(0, weight=1)
 
     def criar_widgets(self):
-        # Barra superior de botões.
+        # Barra superior de botões
         self.toolbar = ttk.Frame(self)
 
+        # Criação dos botões na barra superior
         self.botao_abrir = ttk.Button(self.toolbar, text="Abrir")
         self.botao_salvar = ttk.Button(self.toolbar, text="Salvar")
         self.botao_montar = ttk.Button(self.toolbar, text="Montar")
@@ -35,20 +36,22 @@ class App(tk.Tk):
         self.botao_step = ttk.Button(self.toolbar, text="Step")
         self.botao_reset = ttk.Button(self.toolbar, text="Reset")
 
-        # Área principal da interface.
+        # Área principal da interface
         self.area_principal = ttk.Frame(self)
 
+        # Criação do painel principal de edição
         self.painel_editor = ttk.LabelFrame(self.area_principal, text="Editor")
-        self.painel_lateral = ttk.Frame(self.area_principal)
 
+        # Criação do painel lateral
+        self.painel_lateral = ttk.Frame(self.area_principal)
         self.painel_instrucoes = ttk.LabelFrame(self.painel_lateral, text="Instruções")
         self.painel_registradores = ttk.LabelFrame(self.painel_lateral, text="Registradores")
         self.painel_memoria = ttk.LabelFrame(self.painel_lateral, text="Memória")
 
-        # Terminal inferior.
+        # Criação do terminal inferior
         self.painel_terminal = ttk.LabelFrame(self, text="Terminal")
 
-        # Placeholders temporários.
+        # Placeholder
         self.label_editor = ttk.Label(self.painel_editor, text="Editor ficará aqui")
         self.label_instrucoes = ttk.Label(self.painel_instrucoes, text="Tabela de instruções ficará aqui")
         self.label_registradores = ttk.Label(self.painel_registradores, text="Registradores ficarão aqui")
