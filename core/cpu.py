@@ -1,3 +1,5 @@
+# Implementa a CPU do Sergium
+
 class CPU:
     def __init__(self):     ## inicializa a CPU com valores padrão
         self.resetar()
@@ -14,7 +16,7 @@ class CPU:
         self.p = 0                      # 1 se o último resultado aritmético foi positivo
         self.pc = 0                     # program counter
 
-    def carregar_programa(self, instrucoes):        ## carrega as instruções prontas para a CPU do leitor.py
+    def carregar_programa(self, instrucoes):        ## carrega as instruções prontas para a CPU do parser.py
         self.resetar()
         self.instrucoes = instrucoes
 
