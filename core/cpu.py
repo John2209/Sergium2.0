@@ -2,9 +2,33 @@
 
 class CPU:
     def __init__(self):     ## inicializa a CPU com valores padrão
+        self.dispatch_table = self._criar_dispatch_table()
         self.resetar()
 
-    def resetar(self):      ##
+    def _criar_dispatch_table(self):
+        return {
+            "COP VAL => AC": self._exec_cop_val_ac,
+            "COP AC => AUX": self._exec_cop_ac_aux,
+            "COP AUX => AC": self._exec_cop_aux_ac,
+            "COP AC => MEM": self._exec_cop_ac_mem,
+            "COP MEM => AC": self._exec_cop_mem_ac,
+
+            "SOM AC + VAL => AC": self._exec_som_ac_val_ac,
+            "SUB AC - VAL => AC": self._exec_sub_ac_val_ac,
+            "SOM AC + AUX => AC": self._exec_som_ac_aux_ac,
+            "SUB AC - AUX => AC": self._exec_sub_ac_aux_ac,
+
+            "VAI": self._exec_vai,
+            "VAI SE Z = 1": self._exec_vai_se_z,
+            "VAI SE P = 1": self._exec_vai_se_p,
+
+            "ENT PORTA => AC": self._exec_ent_porta_ac,
+            "SAI AC => PORTA": self._exec_sai_ac_porta,
+
+            "PARA": self._exec_para,
+        }
+
+    def resetar(self):
         self.auxs = [0] * 4             # array de auxiliares
         self.mem = [0] * 256            # memória principal
         self.instrucoes = {}            # dicionário de instruções
@@ -34,96 +58,103 @@ class CPU:
         mnemonico = self.instrucoes[chave_atual][0]     # primeiro ítem da tupla: mnemonico
         operando = self.instrucoes[chave_atual][1]      # segundo ítem da tupla: operando
 
-        # todo: fazer um dispatch table
-        # operando vem como string
 
-        # =====================
-        # OPERAÇÕES DE MEMÓRIA
-        # =====================
-        if mnemonico == "COP VAL => AC":
-            self.ac = int(operando)
+        funcao = self.dispatch_table.get(mnemonico)
 
-        elif mnemonico == "COP AC => AUX":
-            self.auxs[int(operando)] = self.ac
-
-        elif mnemonico == "COP AUX => AC":
-            self.ac = self.auxs[int(operando)]
-
-        elif mnemonico == "COP AC => MEM":
-            self.mem[int(operando)] = self.ac
-
-        elif mnemonico == "COP MEM => AC":
-            self.ac = self.mem[int(operando)]
-
-        # ======================
-        # OPERAÇÕES ARITMÉTICAS
-        # ======================
-        elif mnemonico == "SOM AC + VAL => AC":
-            self.ac = self.ac + int(operando)
-            self.atualizar_flags()
-
-        elif mnemonico == "SUB AC - VAL => AC":
-            self.ac = self.ac - int(operando)
-            self.atualizar_flags()
-
-        elif mnemonico == "SOM AC + AUX => AC":
-            self.ac = self.ac + self.auxs[int(operando)]
-            self.atualizar_flags()
-
-        elif mnemonico == "SUB AC - AUX => AC":
-            self.ac = self.ac - self.auxs[int(operando)]
-            self.atualizar_flags()
-
-        # ====================
-        # OPERAÇÕES DE DESVIO
-        # ====================
-
-        # .index() retorna o índice da primeira ocorrência
-        # todo: substituir busca sequencial em chaves por dicionário de rótulos para índices
-        elif mnemonico == "VAI":
-            if operando in chaves:                  # se o operando (rótulo) estiver em chaves
-                self.pc = chaves.index(operando)    # pc aponta para ele
-                return False                        # o programa não acabou
-            else:
-                raise Exception(f"Rótulo inválido: {operando}")
-
-        elif mnemonico == "VAI SE Z = 1":
-            if self.z == 1:
-                if operando in chaves:
-                    self.pc = chaves.index(operando)
-                    return False
-                else:
-                    raise Exception(f"Rótulo inválido: {operando}")
-
-        elif mnemonico == "VAI SE P = 1":
-            if self.p == 1:
-                if operando in chaves:
-                    self.pc = chaves.index(operando)
-                    return False
-                else:
-                    raise Exception(f"Rótulo inválido: {operando}")
-
-        # =============================
-        # OPERAÇÕES DE ENTRADA E SAÍDA
-        # =============================
-        elif mnemonico == "ENT PORTA => AC":
-            if operando != "0":
-                raise ValueError(f"Porta de entrada inválida: {operando}. Use porta 0.")
-            self.ac = self.entrada
-
-        elif mnemonico == "SAI AC => PORTA":
-            if operando != "2":
-                raise ValueError(f"Porta de saída inválida: {operando}. Use porta 2.")
-            self.saida = self.ac
-
-        # =============================
-        # OPERAÇÕES INCONDICIONAIS
-        # =============================
-        elif mnemonico == 'PARA':
-            return True
-
-        else:
+        if funcao is None:
             raise Exception(f"Instrução inválida: {mnemonico} | {operando}")
 
-        self.pc += 1    # próxima instrução
-        return False    # o programa ainda não acabou
+        resultado = funcao(operando)
+
+        if resultado is True:
+            return True
+
+        if resultado is False:
+            return False
+
+        self.pc += 1
+        return False
+
+
+
+    # ==============================
+    # FUNÇÕES PARA A DISPATCH TABLE
+    # ==============================
+
+    # =====================
+    # OPERAÇÕES DE MEMÓRIA
+    # =====================
+    def _exec_cop_val_ac(self, operando):
+        self.ac = int(operando)
+
+    def _exec_cop_ac_aux(self, operando):
+        self.auxs[int(operando)] = self.ac
+
+    def _exec_cop_aux_ac(self, operando):
+        self.ac = self.auxs[int(operando)]
+
+    def _exec_cop_ac_mem(self, operando):
+        self.mem[int(operando)] = self.ac
+
+    def _exec_cop_mem_ac(self, operando):
+        self.ac = self.mem[int(operando)]
+
+    # ======================
+    # OPERAÇÕES ARITMÉTICAS
+    # ======================
+    def _exec_som_ac_val_ac(self, operando):
+        self.ac = self.ac + int(operando)
+        self.atualizar_flags()
+
+    def _exec_sub_ac_val_ac(self, operando):
+        self.ac = self.ac - int(operando)
+        self.atualizar_flags()
+
+    def _exec_som_ac_aux_ac(self, operando):
+        self.ac = self.ac + self.auxs[int(operando)]
+        self.atualizar_flags()
+
+    def _exec_sub_ac_aux_ac(self, operando):
+        self.ac = self.ac - self.auxs[int(operando)]
+        self.atualizar_flags()
+
+    # ====================
+    # OPERAÇÕES DE DESVIO
+    # ====================
+    # .index() retorna o índice da primeira ocorrência
+    def _exec_vai(self, operando):
+        chaves = list(self.instrucoes.keys())
+
+        if operando in chaves:
+            self.pc = chaves.index(operando)
+            return False
+
+        raise Exception(f"Rótulo inválido: {operando}")
+
+    def _exec_vai_se_z(self, operando):
+        if self.z == 1:
+            return self._exec_vai(operando)
+
+        return None
+
+    def _exec_vai_se_p(self, operando):
+        if self.p == 1:
+            return self._exec_vai(operando)
+
+        return None
+
+    def _exec_ent_porta_ac(self, operando):
+        if operando != "0":
+            raise ValueError(f"Porta de entrada inválida: {operando}. Use porta 0.")
+
+        self.ac = self.entrada
+
+    def _exec_sai_ac_porta(self, operando):
+        if operando != "2":
+            raise ValueError(f"Porta de saída inválida: {operando}. Use porta 2.")
+
+        self.saida = self.ac
+
+    def _exec_para(self, operando):
+        return True
+    
