@@ -32,6 +32,7 @@ class CPU:
         self.auxs = [0] * 4             # array de auxiliares
         self.mem = [0] * 256            # memória principal
         self.instrucoes = {}            # dicionário de instruções
+        self.indices_rotulos = {}        # dicionário de rótulos
         self.entrada = 0                # valor de entrada fornecido externamente (I/O)
         self.saida = None               # valor de saida do Sergium
         self.flag_entrada = False       # indica se há um valor de entrada aguardando leitura
@@ -40,9 +41,13 @@ class CPU:
         self.p = 0                      # 1 se o último resultado aritmético foi positivo
         self.pc = 0                     # program counter
 
-    def carregar_programa(self, instrucoes):        ## carrega as instruções prontas para a CPU do parser.py
+    def carregar_programa(self, instrucoes):  ## carrega as instruções prontas para a CPU do parser.py
         self.resetar()
         self.instrucoes = instrucoes
+        self.indices_rotulos = {
+            rotulo: indice
+            for indice, rotulo in enumerate(self.instrucoes.keys())
+        }
 
     def atualizar_flags(self):
         self.z = 1 if self.ac == 0 else 0      # se ac == 0, Z = 1
@@ -123,10 +128,8 @@ class CPU:
     # ====================
     # .index() retorna o índice da primeira ocorrência
     def _exec_vai(self, operando):
-        chaves = list(self.instrucoes.keys())
-
-        if operando in chaves:
-            self.pc = chaves.index(operando)
+        if operando in self.indices_rotulos:
+            self.pc = self.indices_rotulos[operando]
             return False
 
         raise Exception(f"Rótulo inválido: {operando}")
