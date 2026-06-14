@@ -189,7 +189,6 @@ class CPU:
         return False    # programa ainda não acabou
 
     def executar_tudo(self, limite_instrucoes=1000):
-        # Executa instruções até o programa terminar ou atingir o limite
         instrucoes_executadas = 0
 
         while not self.finalizado:
@@ -198,10 +197,14 @@ class CPU:
                     f"Limite de {limite_instrucoes} instruções atingido. Possível loop infinito."
                 )
 
-            self.executar_instrucao()
+            try:
+                self.executar_instrucao()
+            except EntradaNecessariaError:
+                return False  # pausou esperando entrada
+
             instrucoes_executadas += 1
 
-        return True
+        return True  # terminou de verdade
 
 
     # ==============================
