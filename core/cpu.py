@@ -5,7 +5,8 @@ class CPU:
         self.dispatch_table = self._criar_dispatch_table()
         self.resetar()
 
-    def _criar_dispatch_table(self):
+
+    def _criar_dispatch_table(self):    ##
         return {
             "COP VAL => AC": self._exec_cop_val_ac,
             "COP AC => AUX": self._exec_cop_ac_aux,
@@ -28,11 +29,12 @@ class CPU:
             "PARA": self._exec_para,
         }
 
+
     def resetar(self):
         self.auxs = [0] * 4             # array de auxiliares
         self.mem = [0] * 256            # memória principal
         self.instrucoes = {}            # dicionário de instruções
-        self.indices_rotulos = {}        # dicionário de rótulos
+        self.indices_rotulos = {}       # dicionário de rótulos
         self.entrada = 0                # valor de entrada fornecido externamente (I/O)
         self.saida = None               # valor de saida do Sergium
         self.flag_entrada = False       # indica se há um valor de entrada aguardando leitura
@@ -41,17 +43,21 @@ class CPU:
         self.p = 0                      # 1 se o último resultado aritmético foi positivo
         self.pc = 0                     # program counter
 
-    def carregar_programa(self, instrucoes):  ## carrega as instruções prontas para a CPU do parser.py
+
+    def carregar_programa(self, instrucoes):    ## carrega as instruções prontas para a CPU do parser.py
         self.resetar()
         self.instrucoes = instrucoes
-        self.indices_rotulos = {
-            rotulo: indice
-            for indice, rotulo in enumerate(self.instrucoes.keys())
+        self.indices_rotulos = {                # cria uma tabela auxiliar com os índices dos rótulos
+            rotulo: indice                      # cada chave será um rótulo, e o valor será a posição dele no programa
+            for indice, rotulo in enumerate(self.instrucoes.keys())     # self.instrucoes.keys() pega os rótulos/chaves do programa
+                                                                        # enumerate() numera rótulos em ordem: 0, 1, ...
         }
 
-    def atualizar_flags(self):
+
+    def atualizar_flags(self):      ## atualiza as flags z e p
         self.z = 1 if self.ac == 0 else 0      # se ac == 0, Z = 1
         self.p = 1 if self.ac > 0 else 0       # se ac > 0, P = 1
+
 
     def executar_instrucao(self):      ## executa uma instrução
         chaves = list(self.instrucoes.keys())        # transforma as chaves do dicionário em uma lista ordenada
@@ -63,29 +69,26 @@ class CPU:
         mnemonico = self.instrucoes[chave_atual][0]     # primeiro ítem da tupla: mnemonico
         operando = self.instrucoes[chave_atual][1]      # segundo ítem da tupla: operando
 
+        funcao = self.dispatch_table.get(mnemonico)     # procura na dispatch table qual função exectua esse mnemonico
 
-        funcao = self.dispatch_table.get(mnemonico)
-
-        if funcao is None:
+        if funcao is None:      # se o .get() não o achar, reterona None
             raise Exception(f"Instrução inválida: {mnemonico} | {operando}")
 
-        resultado = funcao(operando)
+        resultado = funcao(operando)    # executa a função, passando o operando
 
-        if resultado is True:
+        if resultado is True:   # se for uma instrução para encerrar o programa
             return True
 
-        if resultado is False:
-            return False
+        if resultado is False:  # se a instrução já alterou o pc (VAI SE)
+            return False        # programa ainda não terminou, mas a CPU não deve incrementar o PC
 
-        self.pc += 1
-        return False
-
+        self.pc += 1    # se for uma instrução comum (valor None), vai para a próxima
+        return False    # programa ainda não acabou
 
 
     # ==============================
     # FUNÇÕES PARA A DISPATCH TABLE
     # ==============================
-
     # =====================
     # OPERAÇÕES DE MEMÓRIA
     # =====================
@@ -126,7 +129,6 @@ class CPU:
     # ====================
     # OPERAÇÕES DE DESVIO
     # ====================
-    # .index() retorna o índice da primeira ocorrência
     def _exec_vai(self, operando):
         if operando in self.indices_rotulos:
             self.pc = self.indices_rotulos[operando]
