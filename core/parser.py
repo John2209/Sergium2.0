@@ -1,4 +1,7 @@
 # Lê arquivos de código Sergium e transforma o texto em instruções iterpretáveis pela CPU
+from .errors import ParserError
+from .instruction_set import INSTRUCOES_VALIDAS, normalizar_mnemonico
+
 
 class Parser:
     def __init__(self, caminho_arquivo: str):       ## Inicializa o parser com o caminho do arquivo
@@ -7,29 +10,38 @@ class Parser:
         self.instrucoes = {}                        # Dicionário para armazenar as instruções
 
     def parsear(self):  ## Função para realizar o parsing do arquivo
+        self.instrucoes = {}  # limpa instruções anteriores caso o mesmo Parser seja reutilizado
 
-        with open(self.caminho_arquivo, 'r') as arquivo:    # abre o arquivo no caminho no modo read. conteudo é objeto
-            conteudo = arquivo.read()                       # tranforma o conteúdo do arquivo em uma string. conteudo passa a ser string
-            linhas = conteudo.splitlines()                  # trasfomar a string em uma lista de strings, cada uma representando uma linha do arquivo
+        with open(self.caminho_arquivo, 'r') as arquivo:  # abre o arquivo no modo leitura
+            conteudo = arquivo.read()  # transforma o conteúdo do arquivo em uma string
+            linhas = conteudo.splitlines()  # transforma a string em uma lista de linhas
 
-            linhas_validas = []  # lista de linhas válidas do código
+            linhas_validas = []  # lista com as linhas válidas e seus números originais no arquivo
 
-            # todo: juntar os dois for em um
-            for linha in linhas:                    # para cada linha em linhas
-                if '|' in linha:                    # se houver '|'
-                    linhas_validas.append(linha)    # adiciona em linhas_validas
+            for numero_linha, linha in enumerate(linhas, start=1):  # percorre as linhas do arquivo começando em 1
+                if '|' in linha:  # se houver '|', a linha tem formato de instrução
+                    linhas_validas.append((numero_linha, linha))  # guarda o número real da linha junto com o texto
 
-            for i, linha in enumerate(linhas_validas):      # para cada linha em linhas_validas
-                partes = linha.split('|')                   # .split() retorna uma lista
+            for i, (numero_linha, linha) in enumerate(linhas_validas):  # percorre as instruções válidas em ordem
+                partes = linha.split('|')  # separa em: rótulo | mnemônico | operando
 
-                rotulo = partes[0].strip().upper()      # transforma o elemento 0 da lista em rotulo, deixa em maiúsculo e retira os espaços
-                mnemonico = partes[1].strip().upper()   # transforma o elemento 1 da lista em mnemônico, deixa em maiúsculo e retira os espaços
-                operando = partes[2].strip().upper()    # transforma o elemento 2 da lista em operando, deixa em maiúsculo e retira os espaços
+                if len(partes) != 3:  # uma instrução precisa ter exatamente 3 partes
+                    raise ParserError(f"Linha {numero_linha} inválida: {linha}")
 
-                if rotulo == "":        # se não houver rótulo,
-                    rotulo = str(i)     # o rótulo passa a ser o índice em formato de string
+                rotulo = partes[0].strip().upper()  # remove espaços e padroniza o rótulo
+                mnemonico = normalizar_mnemonico(partes[1])  # padroniza o mnemônico para o formato oficial
+                operando = partes[2].strip().upper()  # remove espaços e padroniza o operando
 
-                self.instrucoes[rotulo] = (mnemonico, operando) # instrucoes recebe o dicionário com o rotulo e a tupla de mnemonico e operando
+                if mnemonico not in INSTRUCOES_VALIDAS:  # verifica se a instrução existe no Sergium
+                    raise ParserError(f"Linha {numero_linha}: instrução desconhecida: {mnemonico}")
+
+                if rotulo == "":  # se não houver rótulo escrito no arquivo,
+                    rotulo = str(i)  # usa o índice da instrução como rótulo automático
+
+                if rotulo in self.instrucoes:  # impede que um rótulo sobrescreva outro
+                    raise ParserError(f"Linha {numero_linha}: rótulo duplicado: {rotulo}")
+
+                self.instrucoes[rotulo] = (mnemonico, operando)  # guarda a instrução no formato usado pela CPU
 
         return self.instrucoes
 

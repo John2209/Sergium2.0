@@ -1,10 +1,15 @@
 # Implementa a CPU do Sergium
 
-from core.snapshot import Snapshot
-from core.errors import (
+from .snapshot import Snapshot
+from .errors import (
     InstrucaoInvalidaError,
+    OperandoInvalidoError,
     RotuloInvalidoError,
+    AuxiliarInvalidoError,
+    MemoriaInvalidaError,
     PortaInvalidaError,
+    LoopInfinitoError,
+    EntradaNecessariaError,
 )
 
 
@@ -43,9 +48,9 @@ class CPU:
         self.mem = [0] * 256            # memória principal
         self.instrucoes = {}            # dicionário de instruções
         self.indices_rotulos = {}       # dicionário de rótulos
-        self.entrada = 0                # valor de entrada fornecido externamente (I/O)
+        self.entrada = None             # valor de entrada aguardando leitura; None significa que não há entrada disponível
+        self.flag_entrada = False       # indica se há um valor pronto para a próxima instrução ENT
         self.saida = None               # valor de saida do Sergium
-        self.flag_entrada = False       # indica se há um valor de entrada aguardando leitura
         self.ac = 0                     # acumulador
         self.z = 0                      # 1 se o último resultado aritmético foi zero
         self.p = 0                      # 1 se o último resultado aritmético foi positivo
@@ -62,37 +67,91 @@ class CPU:
                                                                         # enumerate() numera rótulos em ordem: 0, 1, ...
         }
 
+    def definir_entrada(self, valor):
+        # Recebe um valor externo para ser usado pela próxima instrução ENT
+        self.entrada = self._converter_operando_para_int(valor)
+        self.flag_entrada = True
+
     def snapshot(self):
+        # Cria uma "foto" do estado atual da CPU para a interface consultar
         chaves = list(self.instrucoes.keys())
 
         rotulo_atual = None
         mnemonico_atual = None
         operando_atual = None
 
+        # Se o PC aponta para uma instrução válida, identifica a instrução atual
         if 0 <= self.pc < len(chaves):
             rotulo_atual = chaves[self.pc]
             mnemonico_atual = self.instrucoes[rotulo_atual][0]
             operando_atual = self.instrucoes[rotulo_atual][1]
 
         return Snapshot(
-            auxs = self.auxs.copy(),
-            mem = self.mem.copy(),
-            entrada = self.entrada,
-            saida = self.saida,
-            ac = self.ac,
-            z = self.z,
-            p = self.p,
-            pc = self.pc,
-            finalizado = self.finalizado,
-            rotulo_atual = rotulo_atual,
-            mnemonico_atual = mnemonico_atual,
-            operando_atual = operando_atual,
+            auxs=self.auxs.copy(),  # cópia para impedir alteração direta dos auxiliares
+            mem=self.mem.copy(),  # cópia para impedir alteração direta da memória
+            entrada=self.entrada,
+            saida=self.saida,
+            ac=self.ac,
+            z=self.z,
+            p=self.p,
+            pc=self.pc,
+            finalizado=self.finalizado,
+            rotulo_atual=rotulo_atual,
+            mnemonico_atual=mnemonico_atual,
+            operando_atual=operando_atual,
         )
 
 
     def atualizar_flags(self):      ## atualiza as flags z e p
         self.z = 1 if self.ac == 0 else 0      # se ac == 0, Z = 1
         self.p = 1 if self.ac > 0 else 0       # se ac > 0, P = 1
+
+
+    def _converter_operando_para_int(self, operando):
+        try:
+            return int(operando)
+        except ValueError:
+            raise OperandoInvalidoError(f"Operando inválido: {operando}. Esperado um número inteiro.")
+
+
+    def _validar_auxiliar(self, operando):
+        indice = self._converter_operando_para_int(operando)
+
+        if indice < 0 or indice >= len(self.auxs):
+            raise AuxiliarInvalidoError(
+                f"Auxiliar inválido: AUX{indice}. Use AUX0 até AUX{len(self.auxs) - 1}."
+            )
+
+        return indice
+
+
+    def _validar_memoria(self, operando):
+        endereco = self._converter_operando_para_int(operando)
+
+        if endereco < 0 or endereco >= len(self.mem):
+            raise MemoriaInvalidaError(
+                f"Endereço de memória inválido: {endereco}. Use valores de 0 até {len(self.mem) - 1}."
+            )
+
+        return endereco
+
+
+    def _validar_porta_entrada(self, operando):
+        porta = self._converter_operando_para_int(operando)
+
+        if porta != 0:
+            raise PortaInvalidaError(f"Porta de entrada inválida: {porta}. Use porta 0.")
+
+        return porta
+
+
+    def _validar_porta_saida(self, operando):
+        porta = self._converter_operando_para_int(operando)
+
+        if porta != 2:
+            raise PortaInvalidaError(f"Porta de saída inválida: {porta}. Use porta 2.")
+
+        return porta
 
 
     def executar_instrucao(self):      ## executa uma instrução
@@ -126,6 +185,20 @@ class CPU:
         self.pc += 1    # se for uma instrução comum (valor None), vai para a próxima
         return False    # programa ainda não acabou
 
+    def executar_tudo(self, limite_instrucoes=1000):
+        instrucoes_executadas = 0
+
+        while not self.finalizado:
+            if instrucoes_executadas >= limite_instrucoes:
+                raise LoopInfinitoError(
+                    f"Limite de {limite_instrucoes} instruções atingido. Possível loop infinito."
+                )
+
+            self.executar_instrucao()
+            instrucoes_executadas += 1
+
+        return True
+
 
     # ==============================
     # FUNÇÕES PARA A DISPATCH TABLE
@@ -134,38 +207,48 @@ class CPU:
     # OPERAÇÕES DE MEMÓRIA
     # =====================
     def _exec_cop_val_ac(self, operando):
-        self.ac = int(operando)
+        self.ac = self._converter_operando_para_int(operando)
 
     def _exec_cop_ac_aux(self, operando):
-        self.auxs[int(operando)] = self.ac
+        indice = self._validar_auxiliar(operando)
+        self.auxs[indice] = self.ac
 
     def _exec_cop_aux_ac(self, operando):
-        self.ac = self.auxs[int(operando)]
+        indice = self._validar_auxiliar(operando)
+        self.ac = self.auxs[indice]
 
     def _exec_cop_ac_mem(self, operando):
-        self.mem[int(operando)] = self.ac
+        endereco = self._validar_memoria(operando)
+        self.mem[endereco] = self.ac
 
     def _exec_cop_mem_ac(self, operando):
-        self.ac = self.mem[int(operando)]
+        endereco = self._validar_memoria(operando)
+        self.ac = self.mem[endereco]
+
 
     # ======================
     # OPERAÇÕES ARITMÉTICAS
     # ======================
     def _exec_som_ac_val_ac(self, operando):
-        self.ac = self.ac + int(operando)
+        valor = self._converter_operando_para_int(operando)
+        self.ac = self.ac + valor
         self.atualizar_flags()
 
     def _exec_sub_ac_val_ac(self, operando):
-        self.ac = self.ac - int(operando)
+        valor = self._converter_operando_para_int(operando)
+        self.ac = self.ac - valor
         self.atualizar_flags()
 
     def _exec_som_ac_aux_ac(self, operando):
-        self.ac = self.ac + self.auxs[int(operando)]
+        indice = self._validar_auxiliar(operando)
+        self.ac = self.ac + self.auxs[indice]
         self.atualizar_flags()
 
     def _exec_sub_ac_aux_ac(self, operando):
-        self.ac = self.ac - self.auxs[int(operando)]
+        indice = self._validar_auxiliar(operando)
+        self.ac = self.ac - self.auxs[indice]
         self.atualizar_flags()
+
 
     # ====================
     # OPERAÇÕES DE DESVIO
@@ -189,16 +272,22 @@ class CPU:
 
         return None
 
+
+    # ====================
+    # OPERAÇÕES DE I/O
+    # ====================
     def _exec_ent_porta_ac(self, operando):
-        if operando != "0":
-            raise PortaInvalidaError(f"Porta de entrada inválida: {operando}. Use porta 0.")
+        self._validar_porta_entrada(operando)
+
+        if not self.flag_entrada:
+            raise EntradaNecessariaError("A instrução ENT precisa de um valor de entrada.")
 
         self.ac = self.entrada
+        self.entrada = None
+        self.flag_entrada = False
 
     def _exec_sai_ac_porta(self, operando):
-        if operando != "2":
-            raise PortaInvalidaError(f"Porta de saída inválida: {operando}. Use porta 2.")
-
+        self._validar_porta_saida(operando)
         self.saida = self.ac
 
     def _exec_para(self, operando):

@@ -48,3 +48,8 @@ class PortaInvalidaError(OperandoInvalidoError):
 class EntradaNecessariaError(CPUError):
     """Erro para quando a CPU precisa de entrada, mas ela não foi fornecida."""
     pass
+
+
+class LoopInfinitoError(CPUError):
+    """Erro para quando o programa excede o limite máximo de instruções executadas."""
+    pass
