@@ -1,55 +1,55 @@
 # Erros próprios do core do Sergium
 
 class SergiumError(Exception):
-    """Erro base de todo o simulador Sergium."""
+    """Erro base do simulador"""
     pass
 
 
 class ParserError(SergiumError):
-    """Erro gerado durante a leitura ou interpretação do código."""
+    """Erro gerado durante a leitura do código"""
     pass
 
 
 class CPUError(SergiumError):
-    """Erro gerado durante a execução do programa pela CPU."""
+    """Erro gerado durante a execução do programa"""
     pass
 
 
 class InstrucaoInvalidaError(CPUError):
-    """Erro para mnemônicos que não existem no Sergium."""
+    """Erro para mnemônicos não existentes"""
     pass
 
 
 class OperandoInvalidoError(CPUError):
-    """Erro para operandos inválidos."""
+    """Erro de operandos inválidos"""
     pass
 
 
 class RotuloInvalidoError(CPUError):
-    """Erro para desvios para rótulos inexistentes."""
+    """Erro de desvios para rótulos inexistentes"""
     pass
 
 
 class AuxiliarInvalidoError(OperandoInvalidoError):
-    """Erro para acesso inválido aos registradores AUX0 até AUX3."""
+    """Erro de acesso inválido aos registradores AUX0 até AUX3"""
     pass
 
 
 class MemoriaInvalidaError(OperandoInvalidoError):
-    """Erro para acesso inválido à memória."""
+    """Erro de acesso inválido à memória"""
     pass
 
 
 class PortaInvalidaError(OperandoInvalidoError):
-    """Erro para acesso inválido às portas de entrada/saída."""
+    """Erro de acesso inválido às portas"""
     pass
 
 
 class EntradaNecessariaError(CPUError):
-    """Erro para quando a CPU precisa de entrada, mas ela não foi fornecida."""
+    """Erro de entrada não fornecida"""
     pass
 
 
 class LoopInfinitoError(CPUError):
-    """Erro para quando o programa excede o limite máximo de instruções executadas."""
+    """Erro de limite máximo de instruções executadas"""
     pass

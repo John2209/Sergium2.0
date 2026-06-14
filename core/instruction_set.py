@@ -1,56 +1,38 @@
-# Conjunto de instruções do Segium
+# Instruções reconhecidas pelo simulador Sergium.
+
 import re
 
-CODIGOS_INSTRUCOES = {
-    "ENT PORTA => AC": 0,
-    "SAI AC => PORTA": 1,
+INSTRUCOES_VALIDAS = {
+    "ENT PORTA => AC",
+    "SAI AC => PORTA",
 
-    "COP AUX => AC": 2,
-    "COP AC => AUX": 3,
-    "COP MEM => AC": 4,
-    "COP AC => MEM": 5,
-    "COP VAL => AC": 6,
+    "COP AUX => AC",
+    "COP AC => AUX",
+    "COP MEM => AC",
+    "COP AC => MEM",
+    "COP VAL => AC",
 
-    "SOM AC + AUX => AC": 10,
-    "SUB AC - AUX => AC": 11,
-    "SOM AC + VAL => AC": 12,
-    "SUB AC - VAL => AC": 13,
+    "SOM AC + AUX => AC",
+    "SUB AC - AUX => AC",
+    "SOM AC + VAL => AC",
+    "SUB AC - VAL => AC",
 
-    "VAI": 20,
-    "VAI SE Z = 1": 21,
-    "VAI SE P = 1": 22,
+    "VAI",
+    "VAI SE Z = 1",
+    "VAI SE P = 1",
 
-    "PARA": 23,
+    "PARA",
 }
 
 
-INSTRUCOES_VALIDAS = set(CODIGOS_INSTRUCOES.keys())
-
-
 def normalizar_mnemonico(mnemonico: str) -> str:
-    """
-    Padroniza o texto de um mnemônico.
-
-    Exemplos:
-    'cop ac=>mem' vira 'COP AC => MEM'
-    'SOM AC+VAL=>AC' vira 'SOM AC + VAL => AC'
-    'vai se z=1' vira 'VAI SE Z = 1'
-    """
-
     texto = mnemonico.strip().upper()
 
     texto = re.sub(r"\s+", " ", texto)
-
-    # Primeiro normaliza a seta =>.
     texto = re.sub(r"\s*=>\s*", " => ", texto)
-
-    # Normaliza operadores aritméticos.
     texto = re.sub(r"\s*\+\s*", " + ", texto)
     texto = re.sub(r"\s*-\s*", " - ", texto)
-
-    # Normaliza apenas o sinal = que NÃO faz parte de =>.
     texto = re.sub(r"\s*=(?!>)\s*", " = ", texto)
-
     texto = re.sub(r"\s+", " ", texto)
 
     return texto.strip()

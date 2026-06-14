@@ -1,11 +1,11 @@
 # para imports diretos
 # from core import CPU, Parser, Snapshot em vez de importar cada um pelo arquivo específico
 
-from .cpu import CPU
-from .parser import Parser
-from .snapshot import Snapshot
+from .cpu import CPU             # exporta a CPU principal do simulador
+from .parser import Parser       # exporta o leitor de arquivos Sergium
+from .snapshot import Snapshot   # exporta a estrutura de estado da CPU
 
-from .errors import (
+from .errors import (            # exporta os erros próprios do core
     SergiumError,
     ParserError,
     CPUError,
@@ -19,8 +19,7 @@ from .errors import (
     LoopInfinitoError,
 )
 
-from .instruction_set import (
-    CODIGOS_INSTRUCOES,
+from .instruction_set import (   # exporta definições das instruções válidas
     INSTRUCOES_VALIDAS,
     normalizar_mnemonico,
     instrucao_existe,

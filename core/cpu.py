@@ -19,7 +19,7 @@ class CPU:
         self.resetar()
 
 
-    def _criar_dispatch_table(self):    ##
+    def _criar_dispatch_table(self):    ## cria a tabela que liga cada mnemônico à função que o executa
         return {
             "COP VAL => AC": self._exec_cop_val_ac,
             "COP AC => AUX": self._exec_cop_ac_aux,
@@ -68,19 +68,19 @@ class CPU:
         }
 
     def definir_entrada(self, valor):
-        # Recebe um valor externo para ser usado pela próxima instrução ENT
+        # recebe um valor externo para ser usado pela próxima instrução ENT
         self.entrada = self._converter_operando_para_int(valor)
         self.flag_entrada = True
 
     def snapshot(self):
-        # Cria uma "foto" do estado atual da CPU para a interface consultar
+        # cria um snapshot do estado atual da CPU para a interface
         chaves = list(self.instrucoes.keys())
 
         rotulo_atual = None
         mnemonico_atual = None
         operando_atual = None
 
-        # Se o PC aponta para uma instrução válida, identifica a instrução atual
+        # se o PC aponta para uma instrução válida, identifica a instrução atual
         if 0 <= self.pc < len(chaves):
             rotulo_atual = chaves[self.pc]
             mnemonico_atual = self.instrucoes[rotulo_atual][0]
@@ -108,6 +108,7 @@ class CPU:
 
 
     def _converter_operando_para_int(self, operando):
+        # converte operandos textuais para inteiro antes de usar em registradores, memória ou portas
         try:
             return int(operando)
         except ValueError:
@@ -115,6 +116,7 @@ class CPU:
 
 
     def _validar_auxiliar(self, operando):
+        # garante que o operando aponta para um registrador auxiliar existente
         indice = self._converter_operando_para_int(operando)
 
         if indice < 0 or indice >= len(self.auxs):
@@ -126,6 +128,7 @@ class CPU:
 
 
     def _validar_memoria(self, operando):
+        # garante que o endereço está dentro da memória disponível
         endereco = self._converter_operando_para_int(operando)
 
         if endereco < 0 or endereco >= len(self.mem):
@@ -186,6 +189,7 @@ class CPU:
         return False    # programa ainda não acabou
 
     def executar_tudo(self, limite_instrucoes=1000):
+        # Executa instruções até o programa terminar ou atingir o limite
         instrucoes_executadas = 0
 
         while not self.finalizado:
@@ -292,4 +296,3 @@ class CPU:
 
     def _exec_para(self, operando):
         return True
-    

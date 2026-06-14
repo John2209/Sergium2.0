@@ -4,12 +4,12 @@ from .instruction_set import INSTRUCOES_VALIDAS, normalizar_mnemonico
 
 
 class Parser:
-    def __init__(self, caminho_arquivo: str):       ## Inicializa o parser com o caminho do arquivo
+    def __init__(self, caminho_arquivo: str):       ## inicializa o parser com o caminho do arquivo
 
-        self.caminho_arquivo = caminho_arquivo      # Armazena o caminho do arquivo
-        self.instrucoes = {}                        # Dicionário para armazenar as instruções
+        self.caminho_arquivo = caminho_arquivo      # armazena o caminho do arquivo
+        self.instrucoes = {}                        # dicionário para armazenar as instruções
 
-    def parsear(self):  ## Função para realizar o parsing do arquivo
+    def parsear(self):  ## função para realizar o parsing do arquivo
         self.instrucoes = {}  # limpa instruções anteriores caso o mesmo Parser seja reutilizado
 
         with open(self.caminho_arquivo, 'r') as arquivo:  # abre o arquivo no modo leitura
@@ -44,9 +44,3 @@ class Parser:
                 self.instrucoes[rotulo] = (mnemonico, operando)  # guarda a instrução no formato usado pela CPU
 
         return self.instrucoes
-
-## PARA TESTES ##
-if __name__ == "__main__":      # executa apenas se parser.py for executado como arquivo principal
-    parser = Parser(r"C:\dev\mSergium\codigos\pTestCompleto.txt")
-    resultado = parser.parsear()
-    print(resultado)
