@@ -3,6 +3,7 @@ from pathlib import Path
 from core.parser import Parser
 
 
+
 def executar_ate_o_fim(cpu, limite=100):
     passos = 0
     terminou = False
@@ -178,49 +179,95 @@ def teste_duas_entradas_step_by_step():
 
     print("teste_duas_entradas_step_by_step passou")
 
-    def teste_duas_entradas_step_by_step():
-        cpu = CPU()
+def teste_duas_entradas_step_by_step():
+    cpu = CPU()
 
-        programa = {
-            "0": ("ENT PORTA => AC", "0"),
-            "1": ("COP AC => AUX", "0"),
-            "2": ("ENT PORTA => AC", "0"),
-            "3": ("SOM AC + AUX => AC", "0"),
-            "4": ("SAI AC => PORTA", "2"),
-            "5": ("PARA", "0"),
-        }
+    programa = {
+        "0": ("ENT PORTA => AC", "0"),
+        "1": ("COP AC => AUX", "0"),
+        "2": ("ENT PORTA => AC", "0"),
+        "3": ("SOM AC + AUX => AC", "0"),
+        "4": ("SAI AC => PORTA", "2"),
+        "5": ("PARA", "0"),
+    }
 
-        cpu.carregar_programa(programa)
+    cpu.carregar_programa(programa)
 
-        cpu.entrada = 10
-        terminou = cpu.executar_instrucao()
-        assert terminou is False
-        assert cpu.ac == 10
+    cpu.entrada = 10
+    terminou = cpu.executar_instrucao()
+    assert terminou is False
+    assert cpu.ac == 10
 
-        terminou = cpu.executar_instrucao()
-        assert terminou is False
-        assert cpu.auxs[0] == 10
+    terminou = cpu.executar_instrucao()
+    assert terminou is False
+    assert cpu.auxs[0] == 10
 
-        cpu.entrada = 7
-        terminou = cpu.executar_instrucao()
-        assert terminou is False
-        assert cpu.ac == 7
+    cpu.entrada = 7
+    terminou = cpu.executar_instrucao()
+    assert terminou is False
+    assert cpu.ac == 7
 
-        executar_ate_o_fim(cpu)
+    executar_ate_o_fim(cpu)
 
-        assert cpu.ac == 17
-        assert cpu.saida == 17
+    assert cpu.ac == 17
+    assert cpu.saida == 17
 
-        print("teste_duas_entradas_step_by_step passou")
+    print("teste_duas_entradas_step_by_step passou")
+
+def teste_snapshot_basico():
+    cpu = CPU()
+
+    programa = {
+        "0": ("COP VAL => AC", "7"),
+        "1": ("PARA", "0"),
+    }
+
+    cpu.carregar_programa(programa)
+
+    estado = cpu.snapshot()
+
+    assert estado.pc == 0
+    assert estado.ac == 0
+    assert estado.finalizado is False
+    assert estado.rotulo_atual == "0"
+    assert estado.mnemonico_atual == "COP VAL => AC"
+    assert estado.operando_atual == "7"
+
+    cpu.executar_instrucao()
+    estado = cpu.snapshot()
+
+    assert estado.pc == 1
+    assert estado.ac == 7
+    assert estado.finalizado is False
+    assert estado.rotulo_atual == "1"
+    assert estado.mnemonico_atual == "PARA"
+    assert estado.operando_atual == "0"
+
+    cpu.executar_instrucao()
+    estado = cpu.snapshot()
+
+    assert estado.finalizado is True
 
 if __name__ == "__main__":
     teste_copia_aritmetica_saida()
-    teste_flags_zero()
-    teste_desvio_condicional()
-    teste_entrada_saida()
-    teste_parser_com_cpu()
-    teste_duas_entradas_step_by_step()
+    print("teste_copia_aritmetica_saida passou")
 
-    print("Todos os testes passaram.")
+    teste_flags_zero()
+    print("teste_flags_zero passou")
+
+    teste_desvio_condicional()
+    print("teste_desvio_condicional passou")
+
+    teste_entrada_saida()
+    print("teste_entrada_saida passou")
+
+    teste_parser_com_cpu()
+    print("teste_parser_com_cpu passou")
+
+    teste_duas_entradas_step_by_step()
+    print("teste_duas_entradas_step_by_step passou")
+
+    teste_snapshot_basico()
+    print("teste_snapshot_basico passou")
 
     print("Todos os testes passaram.")

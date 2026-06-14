@@ -1,5 +1,6 @@
 # Implementa a CPU do Sergium
 
+from core.snapshot import Snapshot
 from core.errors import (
     InstrucaoInvalidaError,
     RotuloInvalidoError,
@@ -49,6 +50,7 @@ class CPU:
         self.z = 0                      # 1 se o último resultado aritmético foi zero
         self.p = 0                      # 1 se o último resultado aritmético foi positivo
         self.pc = 0                     # program counter
+        self.finalizado = False
 
 
     def carregar_programa(self, instrucoes):    ## carrega as instruções prontas para a CPU do parser.py
@@ -60,6 +62,33 @@ class CPU:
                                                                         # enumerate() numera rótulos em ordem: 0, 1, ...
         }
 
+    def snapshot(self):
+        chaves = list(self.instrucoes.keys())
+
+        rotulo_atual = None
+        mnemonico_atual = None
+        operando_atual = None
+
+        if 0 <= self.pc < len(chaves):
+            rotulo_atual = chaves[self.pc]
+            mnemonico_atual = self.instrucoes[rotulo_atual][0]
+            operando_atual = self.instrucoes[rotulo_atual][1]
+
+        return Snapshot(
+            auxs = self.auxs.copy(),
+            mem = self.mem.copy(),
+            entrada = self.entrada,
+            saida = self.saida,
+            ac = self.ac,
+            z = self.z,
+            p = self.p,
+            pc = self.pc,
+            finalizado = self.finalizado,
+            rotulo_atual = rotulo_atual,
+            mnemonico_atual = mnemonico_atual,
+            operando_atual = operando_atual,
+        )
+
 
     def atualizar_flags(self):      ## atualiza as flags z e p
         self.z = 1 if self.ac == 0 else 0      # se ac == 0, Z = 1
@@ -67,10 +96,14 @@ class CPU:
 
 
     def executar_instrucao(self):      ## executa uma instrução
+        if self.finalizado:
+            return True
+
         chaves = list(self.instrucoes.keys())        # transforma as chaves do dicionário em uma lista ordenada
 
         if self.pc >= len(chaves):      # se o pc for maior ou igual ao número de chaves
-            return True     # o programa acabou
+            self.finalizado = True
+            return True                 # o programa acabou
 
         chave_atual = chaves[self.pc]       # chave da instrução atual
         mnemonico = self.instrucoes[chave_atual][0]     # primeiro ítem da tupla: mnemonico
@@ -83,7 +116,8 @@ class CPU:
 
         resultado = funcao(operando)    # executa a função, passando o operando
 
-        if resultado is True:   # se for uma instrução para encerrar o programa
+        if resultado is True:       # se for uma instrução para encerrar o programa
+            self.finalizado = True
             return True
 
         if resultado is False:  # se a instrução já alterou o pc (VAI SE)
