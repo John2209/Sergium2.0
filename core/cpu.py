@@ -1,5 +1,12 @@
 # Implementa a CPU do Sergium
 
+from core.errors import (
+    InstrucaoInvalidaError,
+    RotuloInvalidoError,
+    PortaInvalidaError,
+)
+
+
 class CPU:
     def __init__(self):     ## inicializa a CPU com valores padrão
         self.dispatch_table = self._criar_dispatch_table()
@@ -72,7 +79,7 @@ class CPU:
         funcao = self.dispatch_table.get(mnemonico)     # procura na dispatch table qual função exectua esse mnemonico
 
         if funcao is None:      # se o .get() não o achar, reterona None
-            raise Exception(f"Instrução inválida: {mnemonico} | {operando}")
+            raise InstrucaoInvalidaError(f"Instrução inválida: {mnemonico} | {operando}")
 
         resultado = funcao(operando)    # executa a função, passando o operando
 
@@ -134,7 +141,7 @@ class CPU:
             self.pc = self.indices_rotulos[operando]
             return False
 
-        raise Exception(f"Rótulo inválido: {operando}")
+        raise RotuloInvalidoError(f"Rótulo inválido: {operando}")
 
     def _exec_vai_se_z(self, operando):
         if self.z == 1:
@@ -150,13 +157,13 @@ class CPU:
 
     def _exec_ent_porta_ac(self, operando):
         if operando != "0":
-            raise ValueError(f"Porta de entrada inválida: {operando}. Use porta 0.")
+            raise PortaInvalidaError(f"Porta de entrada inválida: {operando}. Use porta 0.")
 
         self.ac = self.entrada
 
     def _exec_sai_ac_porta(self, operando):
         if operando != "2":
-            raise ValueError(f"Porta de saída inválida: {operando}. Use porta 2.")
+            raise PortaInvalidaError(f"Porta de saída inválida: {operando}. Use porta 2.")
 
         self.saida = self.ac
 
