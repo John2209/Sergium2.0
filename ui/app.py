@@ -193,8 +193,11 @@ class App(ctk.CTk):
         if self._instrucoes_montadas is None:
             self.painel_terminal.erro("Monte o programa antes de executar.")
             return
+
         try:
-            self.minha_cpu.executar_tudo()
+            terminou = self.minha_cpu.executar_tudo()
+            if terminou is False:
+                self.painel_terminal.log("Programa pausado. Aguardando valor de entrada.")
         except Exception as e:
             self.painel_terminal.erro(str(e))
         finally:
