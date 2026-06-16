@@ -41,66 +41,81 @@ class App(ctk.CTk):
         # =========================
         self.toolbar = ctk.CTkFrame(self, corner_radius=12)
         self.area_principal = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
+
+        # Coluna esquerda: editor em cima, terminal embaixo
+        self.area_esquerda = ctk.CTkFrame(self.area_principal, corner_radius=0, fg_color="transparent")
+
+        # Coluna direita: instruções, registradores e memória
         self.painel_lateral = ctk.CTkFrame(self.area_principal, corner_radius=0, fg_color="transparent")
 
         # =========================
         # Botões da toolbar
         # =========================
-        self.botao_abrir  = ctk.CTkButton(self.toolbar, text="Abrir",  width=80, corner_radius=8)
+        self.botao_abrir = ctk.CTkButton(self.toolbar, text="Abrir", width=80, corner_radius=8)
         self.botao_salvar = ctk.CTkButton(self.toolbar, text="Salvar", width=80, corner_radius=8)
         self.botao_montar = ctk.CTkButton(self.toolbar, text="Montar", width=80, corner_radius=8)
-        self.botao_run    = ctk.CTkButton(self.toolbar, text="Run",    width=80, corner_radius=8)
-        self.botao_step   = ctk.CTkButton(self.toolbar, text="Step",   width=80, corner_radius=8)
-        self.botao_reset  = ctk.CTkButton(self.toolbar, text="Reset",  width=80, corner_radius=8)
+        self.botao_run = ctk.CTkButton(self.toolbar, text="Run", width=80, corner_radius=8)
+        self.botao_step = ctk.CTkButton(self.toolbar, text="Step", width=80, corner_radius=8)
+        self.botao_reset = ctk.CTkButton(self.toolbar, text="Reset", width=80, corner_radius=8)
 
         # =========================
         # Painéis
         # =========================
-        self.painel_editor        = EditorPanel      (self.area_principal, corner_radius=12)
-        self.painel_instrucoes    = InstructionsPanel(self.painel_lateral,  corner_radius=12)
-        self.painel_registradores = RegistersPanel   (self.painel_lateral,  corner_radius=12)
-        self.painel_memoria       = MemoryPanel      (self.painel_lateral,  corner_radius=12)
-        self.painel_terminal      = TerminalPanel    (self,                 corner_radius=12)
+        self.painel_editor = EditorPanel(self.area_esquerda, corner_radius=12)
+        self.painel_terminal = TerminalPanel(self.area_esquerda, corner_radius=12)
+
+        self.painel_instrucoes = InstructionsPanel(self.painel_lateral, corner_radius=12)
+        self.painel_registradores = RegistersPanel(self.painel_lateral, corner_radius=12)
+        self.painel_memoria = MemoryPanel(self.painel_lateral, corner_radius=12)
 
     def configurar_layout(self):
         # =========================
         # Layout geral da janela
         # =========================
-        self.toolbar.grid        (row=0, column=0, sticky="ew",   padx=8, pady=8)
-        self.area_principal.grid (row=1, column=0, sticky="nsew", padx=8)
-        self.painel_terminal.grid(row=2, column=0, sticky="ew",   padx=8, pady=8)
+        self.toolbar.grid(row=0, column=0, sticky="ew", padx=8, pady=8)
+        self.area_principal.grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
 
         # =========================
         # Layout da toolbar
         # =========================
-        self.botao_abrir .grid(row=0, column=0, padx=4, pady=8)
+        self.botao_abrir.grid(row=0, column=0, padx=4, pady=8)
         self.botao_salvar.grid(row=0, column=1, padx=4, pady=8)
         self.botao_montar.grid(row=0, column=2, padx=4, pady=8)
-        self.botao_run   .grid(row=0, column=3, padx=4, pady=8)
-        self.botao_step  .grid(row=0, column=4, padx=4, pady=8)
-        self.botao_reset .grid(row=0, column=5, padx=4, pady=8)
+        self.botao_run.grid(row=0, column=3, padx=4, pady=8)
+        self.botao_step.grid(row=0, column=4, padx=4, pady=8)
+        self.botao_reset.grid(row=0, column=5, padx=4, pady=8)
 
         # =========================
         # Layout da área principal
         # =========================
         self.area_principal.grid_rowconfigure(0, weight=1)
-        self.area_principal.grid_columnconfigure(0, weight=3)
-        self.area_principal.grid_columnconfigure(1, weight=2)
+        self.area_principal.grid_columnconfigure(0, weight=3, minsize=620)
+        self.area_principal.grid_columnconfigure(1, weight=1, minsize=320)
 
-        self.painel_editor .grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        self.area_esquerda.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         self.painel_lateral.grid(row=0, column=1, sticky="nsew")
 
         # =========================
-        # Layout do painel lateral
+        # Coluna esquerda: editor + terminal
+        # =========================
+        self.area_esquerda.grid_rowconfigure(0, weight=4)
+        self.area_esquerda.grid_rowconfigure(1, weight=1, minsize=130)
+        self.area_esquerda.grid_columnconfigure(0, weight=1)
+
+        self.painel_editor.grid(row=0, column=0, sticky="nsew", pady=(0, 8))
+        self.painel_terminal.grid(row=1, column=0, sticky="nsew")
+
+        # =========================
+        # Coluna direita: instruções + registradores + memória
         # =========================
         self.painel_lateral.grid_rowconfigure(0, weight=2)
         self.painel_lateral.grid_rowconfigure(1, weight=1)
-        self.painel_lateral.grid_rowconfigure(2, weight=2)
+        self.painel_lateral.grid_rowconfigure(2, weight=3)
         self.painel_lateral.grid_columnconfigure(0, weight=1)
 
-        self.painel_instrucoes   .grid(row=0, column=0, sticky="nsew", pady=(0, 8))
+        self.painel_instrucoes.grid(row=0, column=0, sticky="nsew", pady=(0, 8))
         self.painel_registradores.grid(row=1, column=0, sticky="nsew", pady=(0, 8))
-        self.painel_memoria      .grid(row=2, column=0, sticky="nsew")
+        self.painel_memoria.grid(row=2, column=0, sticky="nsew")
 
     def conectar_botoes(self):
         self.botao_abrir .configure(command=self._acao_abrir)
