@@ -19,10 +19,17 @@ class App(ctk.CTk):
         self._instrucoes_montadas = None
         self._caminho_arquivo = None
 
+        # Estado dos divisores redimensionáveis da interface.
+        # Guardamos proporções, não pixels, para funcionar bem em janela e tela cheia.
+        self._estado_layout_atual = "janela"
+        self._ratios_layout = {}
+        self._aplicando_layout_salvo = False
+
         self.configurar_janela()
         self.criar_widgets()
         self.configurar_layout()
         self.conectar_botoes()
+        self._conectar_eventos_layout()
         self.painel_terminal.definir_callback_entrada(self._acao_entrada)
 
     def configurar_janela(self):
@@ -33,32 +40,81 @@ class App(ctk.CTk):
         self.geometry("1180x700")
         self.minsize(1000, 620)
 
+        # Fundo geral mais escuro para os painéis parecerem blocos flutuando
+        self.configure(fg_color="#111111")
+
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
     def criar_widgets(self):
         # =========================
+        # Cores principais
+        # =========================
+        cor_fundo = "#111111"
+        cor_toolbar = "#242424"
+        cor_painel = "#2B2B2B"
+
+        # =========================
         # Containers principais
         # =========================
-        self.toolbar = ctk.CTkFrame(self, corner_radius=12)
-        self.area_principal = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
+        self.toolbar = ctk.CTkFrame(
+            self,
+            corner_radius=12,
+            fg_color=cor_toolbar,
+        )
+
+        self.area_principal = ctk.CTkFrame(
+            self,
+            corner_radius=0,
+            fg_color=cor_fundo,
+        )
+
+        # Divisor redimensionável entre coluna esquerda e coluna direita
+        self.divisor_principal = tk.PanedWindow(
+            self.area_principal,
+            orient=tk.HORIZONTAL,
+            sashwidth=4,
+            sashrelief="flat",
+            bd=0,
+            bg=cor_fundo,
+            showhandle=False,
+        )
 
         # Coluna esquerda: editor em cima, terminal embaixo
-        self.area_esquerda = ctk.CTkFrame(self.area_principal, corner_radius=0, fg_color="transparent")
+        self.area_esquerda = ctk.CTkFrame(
+            self.divisor_principal,
+            corner_radius=0,
+            fg_color=cor_fundo,
+        )
 
         # Divisor redimensionável entre editor e terminal
         self.divisor_esquerdo = tk.PanedWindow(
             self.area_esquerda,
             orient=tk.VERTICAL,
-            sashwidth=6,
+            sashwidth=4,
             sashrelief="flat",
             bd=0,
-            bg="#111111",
+            bg=cor_fundo,
             showhandle=False,
         )
 
         # Coluna direita: instruções, registradores e memória
-        self.painel_lateral = ctk.CTkFrame(self.area_principal, corner_radius=0, fg_color="transparent")
+        self.painel_lateral = ctk.CTkFrame(
+            self.divisor_principal,
+            corner_radius=0,
+            fg_color=cor_fundo,
+        )
+
+        # Divisor redimensionável entre instruções, registradores e memória
+        self.divisor_lateral = tk.PanedWindow(
+            self.painel_lateral,
+            orient=tk.VERTICAL,
+            sashwidth=4,
+            sashrelief="flat",
+            bd=0,
+            bg=cor_fundo,
+            showhandle=False,
+        )
 
         # =========================
         # Botões da toolbar
@@ -73,19 +129,55 @@ class App(ctk.CTk):
         # =========================
         # Painéis
         # =========================
-        self.painel_editor = EditorPanel(self.area_esquerda, corner_radius=12)
-        self.painel_terminal = TerminalPanel(self.area_esquerda, corner_radius=12)
+        self.painel_editor = EditorPanel(
+            self.divisor_esquerdo,
+            corner_radius=12,
+            fg_color=cor_painel,
+        )
 
-        self.painel_instrucoes = InstructionsPanel(self.painel_lateral, corner_radius=12)
-        self.painel_registradores = RegistersPanel(self.painel_lateral, corner_radius=12)
-        self.painel_memoria = MemoryPanel(self.painel_lateral, corner_radius=12)
+        self.painel_terminal = TerminalPanel(
+            self.divisor_esquerdo,
+            corner_radius=12,
+            fg_color=cor_painel,
+        )
+
+        self.painel_instrucoes = InstructionsPanel(
+            self.divisor_lateral,
+            corner_radius=12,
+            fg_color=cor_painel,
+        )
+
+        self.painel_registradores = RegistersPanel(
+            self.divisor_lateral,
+            corner_radius=12,
+            fg_color=cor_painel,
+        )
+
+        self.painel_memoria = MemoryPanel(
+            self.divisor_lateral,
+            corner_radius=12,
+            fg_color=cor_painel,
+        )
 
     def configurar_layout(self):
         # =========================
         # Layout geral da janela
         # =========================
-        self.toolbar.grid(row=0, column=0, sticky="ew", padx=8, pady=8)
-        self.area_principal.grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        self.toolbar.grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=8,
+            pady=(8, 4),
+        )
+
+        self.area_principal.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=8,
+            pady=(4, 8),
+        )
 
         # =========================
         # Layout da toolbar
@@ -101,25 +193,49 @@ class App(ctk.CTk):
         # Layout da área principal
         # =========================
         self.area_principal.grid_rowconfigure(0, weight=1)
-        self.area_principal.grid_columnconfigure(0, weight=3, minsize=620)
-        self.area_principal.grid_columnconfigure(1, weight=1, minsize=320)
+        self.area_principal.grid_columnconfigure(0, weight=1)
 
-        self.area_esquerda.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        self.painel_lateral.grid(row=0, column=1, sticky="nsew")
+        # Esta linha estava faltando.
+        # Sem ela, os painéis não aparecem.
+        self.divisor_principal.grid(
+            row=0,
+            column=0,
+            sticky="nsew",
+        )
+
+        self.divisor_principal.add(
+            self.area_esquerda,
+            minsize=620,
+            padx=2,
+            pady=0,
+            sticky="nsew",
+        )
+
+        self.divisor_principal.add(
+            self.painel_lateral,
+            minsize=320,
+            padx=2,
+            pady=0,
+            sticky="nsew",
+        )
 
         # =========================
-        # Coluna esquerda: editor + terminal redimensionáveis
+        # Coluna esquerda: editor + terminal
         # =========================
         self.area_esquerda.grid_rowconfigure(0, weight=1)
         self.area_esquerda.grid_columnconfigure(0, weight=1)
 
-        self.divisor_esquerdo.grid(row=0, column=0, sticky="nsew")
+        self.divisor_esquerdo.grid(
+            row=0,
+            column=0,
+            sticky="nsew",
+        )
 
         self.divisor_esquerdo.add(
             self.painel_editor,
             minsize=320,
             padx=0,
-            pady=0,
+            pady=2,
             sticky="nsew",
         )
 
@@ -127,53 +243,79 @@ class App(ctk.CTk):
             self.painel_terminal,
             minsize=120,
             padx=0,
-            pady=0,
+            pady=2,
             sticky="nsew",
         )
-
-        self.after(100, self._ajustar_divisor_esquerdo)
 
         # =========================
         # Coluna direita: instruções + registradores + memória
         # =========================
-
-        # Instruções e memória crescem quando há espaço.
-        # Registradores ficam mais estáveis, porque agora são compactos.
-        self.painel_lateral.grid_rowconfigure(0, weight=3, minsize=150)
-        self.painel_lateral.grid_rowconfigure(1, weight=0, minsize=145)
-        self.painel_lateral.grid_rowconfigure(2, weight=3, minsize=150)
+        self.painel_lateral.grid_rowconfigure(0, weight=1)
         self.painel_lateral.grid_columnconfigure(0, weight=1)
 
-        self.painel_instrucoes.grid(
+        self.divisor_lateral.grid(
             row=0,
             column=0,
             sticky="nsew",
-            pady=(0, 8),
         )
 
-        self.painel_registradores.grid(
-            row=1,
-            column=0,
-            sticky="ew",
-            pady=(0, 8),
-        )
-
-        self.painel_memoria.grid(
-            row=2,
-            column=0,
+        self.divisor_lateral.add(
+            self.painel_instrucoes,
+            minsize=130,
+            padx=0,
+            pady=2,
             sticky="nsew",
         )
 
+        self.divisor_lateral.add(
+            self.painel_registradores,
+            minsize=135,
+            padx=0,
+            pady=2,
+            sticky="nsew",
+        )
+
+        self.divisor_lateral.add(
+            self.painel_memoria,
+            minsize=150,
+            padx=0,
+            pady=2,
+            sticky="nsew",
+        )
+
+        self.after(100, self._ajustar_divisor_esquerdo)
+        self.after(100, self._ajustar_divisor_principal)
+        self.after(100, self._ajustar_divisor_lateral)
+
     def _ajustar_divisor_esquerdo(self):
-        # Define uma posição inicial boa para a divisória entre editor e terminal.
-        # Depois disso, o usuário pode arrastar livremente.
         altura = self.area_esquerda.winfo_height()
 
         if altura <= 0:
             return
 
-        posicao = int(altura * 0.75)
+        posicao = int(altura * 0.70)
         self.divisor_esquerdo.sash_place(0, 0, posicao)
+
+    def _ajustar_divisor_principal(self):
+        largura = self.area_principal.winfo_width()
+
+        if largura <= 0:
+            return
+
+        posicao = int(largura * 0.58)
+        self.divisor_principal.sash_place(0, posicao, 0)
+
+    def _ajustar_divisor_lateral(self):
+        altura = self.painel_lateral.winfo_height()
+
+        if altura <= 0:
+            return
+
+        posicao_instrucoes = int(altura * 0.34)
+        posicao_registradores = int(altura * 0.60)
+
+        self.divisor_lateral.sash_place(0, 0, posicao_instrucoes)
+        self.divisor_lateral.sash_place(1, 0, posicao_registradores)
 
     def conectar_botoes(self):
         self.botao_abrir .configure(command=self._acao_abrir)
@@ -182,6 +324,120 @@ class App(ctk.CTk):
         self.botao_run   .configure(command=self._acao_run)
         self.botao_step  .configure(command=self._acao_step)
         self.botao_reset .configure(command=self._acao_reset)
+
+    def _conectar_eventos_layout(self):
+        # Quando o usuário solta um divisor, salvamos a proporção atual.
+        self.divisor_principal.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
+        self.divisor_esquerdo.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
+        self.divisor_lateral.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
+
+        # Detecta troca entre modo janela e maximizado.
+        self.bind("<Configure>", self._ao_configurar_janela)
+
+        # Depois que os divisores iniciais forem posicionados, salva o layout inicial de janela.
+        self.after(200, self._salvar_layout_atual)
+
+    def _estado_visual_janela(self):
+        # No Windows, janela maximizada normalmente aparece como "zoomed".
+        # Para o nosso caso, tratamos isso como tela cheia/maximizado.
+        return "maximizado" if self.state() == "zoomed" else "janela"
+
+    def _ao_soltar_divisor(self, event=None):
+        # Espera o Tk terminar de atualizar a posição visual do divisor.
+        self.after(50, self._salvar_layout_atual)
+
+    def _ao_configurar_janela(self, event=None):
+        # Ignora eventos de widgets internos. Queremos só mudanças da janela principal.
+        if event is not None and event.widget is not self:
+            return
+
+        novo_estado = self._estado_visual_janela()
+
+        if novo_estado == self._estado_layout_atual:
+            return
+
+        self._estado_layout_atual = novo_estado
+
+        if novo_estado in self._ratios_layout:
+            self.after(100, lambda: self._aplicar_layout_salvo(self._ratios_layout[novo_estado]))
+            return
+
+        # Primeira vez entrando em maximizado:
+        # aplica uma distribuição usual, confortável para apresentação.
+        if novo_estado == "maximizado":
+            ratios_padrao = {
+                "principal": 0.58,
+                "esquerdo": 0.70,
+                "lateral_1": 0.34,
+                "lateral_2": 0.60,
+            }
+
+            self._ratios_layout["maximizado"] = ratios_padrao
+            self.after(100, lambda: self._aplicar_layout_salvo(ratios_padrao))
+
+    def _salvar_layout_atual(self):
+        if self._aplicando_layout_salvo:
+            return
+
+        estado = self._estado_visual_janela()
+        self._estado_layout_atual = estado
+
+        try:
+            largura_principal = self.area_principal.winfo_width()
+            altura_esquerda = self.area_esquerda.winfo_height()
+            altura_lateral = self.painel_lateral.winfo_height()
+
+            if largura_principal <= 0 or altura_esquerda <= 0 or altura_lateral <= 0:
+                return
+
+            principal_x = self.divisor_principal.sash_coord(0)[0]
+            esquerdo_y = self.divisor_esquerdo.sash_coord(0)[1]
+            lateral_1_y = self.divisor_lateral.sash_coord(0)[1]
+            lateral_2_y = self.divisor_lateral.sash_coord(1)[1]
+
+            self._ratios_layout[estado] = {
+                "principal": principal_x / largura_principal,
+                "esquerdo": esquerdo_y / altura_esquerda,
+                "lateral_1": lateral_1_y / altura_lateral,
+                "lateral_2": lateral_2_y / altura_lateral,
+            }
+
+        except tk.TclError:
+            # Pode acontecer durante a criação inicial da janela.
+            return
+
+    def _aplicar_layout_salvo(self, ratios):
+        self._aplicando_layout_salvo = True
+
+        try:
+            self.update_idletasks()
+
+            largura_principal = self.area_principal.winfo_width()
+            if largura_principal > 0:
+                x_principal = int(largura_principal * ratios["principal"])
+                self.divisor_principal.sash_place(0, x_principal, 0)
+
+            self.update_idletasks()
+
+            altura_esquerda = self.area_esquerda.winfo_height()
+            if altura_esquerda > 0:
+                y_esquerdo = int(altura_esquerda * ratios["esquerdo"])
+                self.divisor_esquerdo.sash_place(0, 0, y_esquerdo)
+
+            altura_lateral = self.painel_lateral.winfo_height()
+            if altura_lateral > 0:
+                y_lateral_1 = int(altura_lateral * ratios["lateral_1"])
+                y_lateral_2 = int(altura_lateral * ratios["lateral_2"])
+
+                self.divisor_lateral.sash_place(0, 0, y_lateral_1)
+                self.divisor_lateral.sash_place(1, 0, y_lateral_2)
+
+        finally:
+            self.after(100, self._finalizar_aplicacao_layout_salvo)
+
+    def _finalizar_aplicacao_layout_salvo(self):
+        self._aplicando_layout_salvo = False
+        self._salvar_layout_atual()
 
     # ─────────────────────────────────────────────
     # Atualização da UI
