@@ -1,4 +1,4 @@
-# Erros próprios do core do Sergium
+# erros do Sergium
 
 class SergiumError(Exception):
     """Erro base do simulador"""

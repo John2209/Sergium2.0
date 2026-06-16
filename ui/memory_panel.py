@@ -1,9 +1,8 @@
 # define o painel de memória
-# mostra os endereços e seus valores; destaca células alteradas
+# mostra os endereços e seus valores
 
 import customtkinter as ctk
 from tkinter import ttk
-
 
 class MemoryPanel(ctk.CTkFrame):
 
@@ -15,6 +14,7 @@ class MemoryPanel(ctk.CTkFrame):
         self._criar_widgets()      # cria a tabela e a barra de rolagem
         self._configurar_layout()  # posiciona os elementos na grade
         self._popular_tabela()     # cria as linhas fixas da memória
+
 
     def _criar_widgets(self):
         self.titulo = ctk.CTkLabel(
@@ -85,6 +85,7 @@ class MemoryPanel(ctk.CTkFrame):
 
         self.tree.configure(yscrollcommand=self.scrollbar.set)
 
+
     def _configurar_layout(self):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -114,6 +115,7 @@ class MemoryPanel(ctk.CTkFrame):
             pady=(0, 10),
         )
 
+
     def _popular_tabela(self):
         """cria as 256 linhas uma única vez; atualizar() só muda os valores."""
         for i in range(256):
@@ -124,10 +126,9 @@ class MemoryPanel(ctk.CTkFrame):
                 values=(f"{i:03d}", "0"),
             )
 
-    # ─────────────────────────────────────────────
+    # =============================================
     # api pública
-    # ─────────────────────────────────────────────
-
+    # =============================================
     def atualizar(self, snapshot):
         """atualiza apenas as células cujo valor mudou e destaca em amarelo."""
         for i, valor in enumerate(snapshot.mem):

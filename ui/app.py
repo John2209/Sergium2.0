@@ -1,4 +1,4 @@
-# ponto de entrada da interface gráfica
+# ponto de entrada da ui
 # inicialização da aplicação
 
 import customtkinter as ctk
@@ -6,11 +6,9 @@ import tkinter as tk
 from tkinter import filedialog
 import tempfile
 import os
-
 from ui import RegistersPanel, EditorPanel, InstructionsPanel, TerminalPanel, MemoryPanel
 
 LARGURA_MINIMA_LATERAL = 320
-
 
 class App(ctk.CTk):
 
@@ -22,7 +20,6 @@ class App(ctk.CTk):
         self._caminho_arquivo = None            # caminho do arquivo aberto ou salvo
 
         # estado dos divisores redimensionáveis da interface
-        # guardamos proporções, não pixels, para funcionar bem em janela e tela cheia
         self._estado_layout_atual = "janela"
         self._ratios_layout = {}
         self._aplicando_layout_salvo = False
@@ -35,6 +32,7 @@ class App(ctk.CTk):
         self._conectar_eventos_layout()
         self.painel_terminal.definir_callback_entrada(self._acao_entrada)
 
+
     def configurar_janela(self):
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
@@ -42,12 +40,11 @@ class App(ctk.CTk):
         self.title("Sergium 2.0")
         self.geometry("1180x700")
         self.minsize(1000, 620)
-
-        # fundo geral mais escuro para os painéis parecerem blocos flutuando
         self.configure(fg_color="#111111")
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
+
 
     def criar_widgets(self):
         # =========================
@@ -219,6 +216,7 @@ class App(ctk.CTk):
             fg_color=cor_painel,
         )
 
+
     def configurar_layout(self):
         # =========================
         # layout geral da janela
@@ -347,6 +345,7 @@ class App(ctk.CTk):
         self.after(100, self._ajustar_divisor_principal)
         self.after(100, self._ajustar_divisor_lateral)
 
+
     def _ajustar_divisor_esquerdo(self):
         altura = self.area_esquerda.winfo_height()
 
@@ -356,6 +355,7 @@ class App(ctk.CTk):
         posicao = int(altura * 0.70)
         self.divisor_esquerdo.sash_place(0, 0, posicao)
 
+
     def _ajustar_divisor_principal(self):
         largura = self.area_principal.winfo_width()
 
@@ -364,6 +364,7 @@ class App(ctk.CTk):
 
         posicao = max(620, largura - LARGURA_MINIMA_LATERAL)
         self.divisor_principal.sash_place(0, posicao, 0)
+
 
     def _ajustar_divisor_lateral(self):
         altura = self.painel_lateral.winfo_height()
@@ -377,6 +378,7 @@ class App(ctk.CTk):
         self.divisor_lateral.sash_place(0, 0, posicao_instrucoes)
         self.divisor_lateral.sash_place(1, 0, posicao_registradores)
 
+
     def conectar_botoes(self):
         self.botao_abrir .configure(command=self._acao_abrir)
         self.botao_salvar.configure(command=self._acao_salvar)
@@ -384,6 +386,7 @@ class App(ctk.CTk):
         self.botao_run   .configure(command=self._acao_run)
         self.botao_step  .configure(command=self._acao_step)
         self.botao_reset .configure(command=self._acao_reset)
+
 
     def _atualizar_estado_botoes(self):
         programa_montado = self._instrucoes_montadas is not None
@@ -396,8 +399,9 @@ class App(ctk.CTk):
         self.botao_step.configure(state=estado_execucao)
         self.botao_reset.configure(state=estado_reset)
 
+
     def _conectar_eventos_layout(self):
-        # quando o usuário solta um divisor, salvamos a proporção atual
+        # quando o usuário solta um divisor, se salva a posição atual
         self.divisor_principal.bind("<Button-1>", self._bloquear_divisor_principal)
         self.divisor_principal.bind("<B1-Motion>", self._bloquear_divisor_principal)
         self.divisor_principal.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
@@ -411,8 +415,8 @@ class App(ctk.CTk):
         self.after(200, self._salvar_layout_atual)
 
     def _estado_visual_janela(self):
-        # no windows, janela maximizada normalmente aparece como "zoomed"
-        # para o nosso caso, tratamos isso como tela cheia/maximizado
+        # no windows, janela maximizada normalmente aparece como zoomed
+        # tratamos como tela cheia
         return "maximizado" if self.state() == "zoomed" else "janela"
 
     def _bloquear_divisor_principal(self, event=None):
@@ -439,8 +443,7 @@ class App(ctk.CTk):
             self.after(100, lambda: self._aplicar_layout_salvo(self._ratios_layout[novo_estado]))
             return
 
-        # primeira vez entrando em maximizado:
-        # aplica uma distribuição usual, confortável para apresentação
+        # primeira vez entrando em maximizado aplica uma distribuição usual
         if novo_estado == "maximizado":
             ratios_padrao = {
                 "principal": 0.58,
@@ -451,6 +454,7 @@ class App(ctk.CTk):
 
             self._ratios_layout["maximizado"] = ratios_padrao
             self.after(100, lambda: self._aplicar_layout_salvo(ratios_padrao))
+
 
     def _salvar_layout_atual(self):
         if self._aplicando_layout_salvo:
@@ -482,6 +486,7 @@ class App(ctk.CTk):
         except tk.TclError:
             # pode acontecer durante a criação inicial da janela
             return
+
 
     def _aplicar_layout_salvo(self, ratios):
         self._aplicando_layout_salvo = True
@@ -516,10 +521,9 @@ class App(ctk.CTk):
         self._aplicando_layout_salvo = False
         self._salvar_layout_atual()
 
-    # ─────────────────────────────────────────────
+    # =============================================
     # atualização da ui
-    # ─────────────────────────────────────────────
-
+    # =============================================
     def _atualizar_ui(self):
         snap = self.minha_cpu.snapshot()
         self.painel_registradores.atualizar(snap)
@@ -538,10 +542,9 @@ class App(ctk.CTk):
         if snap.finalizado:
             self.painel_terminal.log("Programa finalizado.")
 
-    # ─────────────────────────────────────────────
+    # =============================================
     # ações dos botões
-    # ─────────────────────────────────────────────
-
+    # =============================================
     def _acao_abrir(self):
         caminho = filedialog.askopenfilename(
             filetypes=[("Arquivos Sergium", "*.srg"), ("Todos", "*.*")]
@@ -555,21 +558,22 @@ class App(ctk.CTk):
         with open(caminho, "r", encoding="utf-8") as f:
             self.painel_editor.set_texto(f.read())
 
-        # ao abrir um novo arquivo, o programa anterior deixa de ser válido
+        # ao abrir um novo arquivo, reseta a cpu
         self._instrucoes_montadas = None
         self.minha_cpu.resetar()
 
-        # reseta os painéis visuais ligados à execução anterior
+        # reseta os painéis visuais
         self.painel_instrucoes.resetar()
         self.painel_registradores.resetar()
         self.painel_memoria.resetar()
         self.painel_editor.resetar_destaque()
         self.painel_terminal.limpar()
 
-        # atualiza os botões: run, step e reset voltam a ficar desativados
+        # atualiza os botões
         self._atualizar_estado_botoes()
 
         self.painel_terminal.log(f"Arquivo aberto: {caminho}")
+
 
     def _acao_salvar(self):
         caminho = self._caminho_arquivo or filedialog.asksaveasfilename(
@@ -584,6 +588,7 @@ class App(ctk.CTk):
             f.write(self.painel_editor.get_texto())
         self.painel_terminal.log(f"Arquivo salvo: {caminho}")
 
+
     def _acao_montar(self):
         from core import Parser, ParserError
 
@@ -592,7 +597,7 @@ class App(ctk.CTk):
             self.painel_terminal.erro("Editor vazio. Escreva um programa antes de montar.")
             return
 
-        # parser lê arquivos, então salva em temporário
+        # parser lê arquivos, salva em temporário
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".srg", delete=False, encoding="utf-8"
         ) as tmp:
@@ -612,10 +617,12 @@ class App(ctk.CTk):
             self.painel_terminal.log(f"Montado com sucesso: {len(instrucoes)} instrução(ões).")
             self._atualizar_ui()
             self._atualizar_estado_botoes()
+
         except Exception as e:
             self._instrucoes_montadas = None
             self.painel_terminal.erro(str(e))
             self._atualizar_estado_botoes()
+
         finally:
             os.unlink(caminho_tmp)
 
@@ -628,11 +635,14 @@ class App(ctk.CTk):
             terminou = self.minha_cpu.executar_tudo()
             if terminou is False:
                 self.painel_terminal.log("Programa pausado. Aguardando valor de entrada.")
+
         except Exception as e:
             self.painel_terminal.erro(str(e))
+
         finally:
             self._atualizar_ui()
             self._atualizar_estado_botoes()
+
 
     def _acao_step(self):
         if self._instrucoes_montadas is None:
@@ -646,8 +656,9 @@ class App(ctk.CTk):
             self._atualizar_ui()
             self._atualizar_estado_botoes()
 
+
     def _acao_entrada(self, valor: str):
-        """chamado pelo terminal quando o usuário envia um valor de entrada."""
+        """chamado pelo terminal quando o usuário envia um valor de entrada"""
         try:
             self.minha_cpu.definir_entrada(valor)
         except Exception as e:

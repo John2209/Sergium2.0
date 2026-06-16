@@ -1,8 +1,7 @@
 # define o painel de registradores
-# mostra pc, ac, z, p e aux0–aux3 em cards compactos organizados em duas colunas
+# mostra pc, ac, z, p e aux0–aux3
 
 import customtkinter as ctk
-
 
 class RegistersPanel(ctk.CTkFrame):
     COR_CARD = "#222222"

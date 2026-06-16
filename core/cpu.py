@@ -1,4 +1,4 @@
-# Implementa a CPU do Sergium
+# implementa a CPU do Sergium
 
 from .snapshot import Snapshot
 from .errors import (
@@ -67,16 +67,19 @@ class CPU:
                                                                         # enumerate() numera rótulos em ordem: 0, 1, ...
         }
 
+
     def definir_entrada(self, valor):
         # recebe um valor externo para ser usado pela próxima instrução ENT
         self.entrada = self._converter_operando_para_int(valor)
         self.flag_entrada = True
+
 
     def consumir_saida(self):
         # entrega a saída atual para a interface e limpa para não imprimir de novo
         saida = self.saida
         self.saida = None
         return saida
+
 
     def snapshot(self):
         # cria um snapshot do estado atual da CPU para a interface
@@ -193,6 +196,7 @@ class CPU:
 
         self.pc += 1    # se for uma instrução comum (valor None), vai para a próxima
         return False    # programa ainda não acabou
+
 
     def executar_tudo(self, limite_instrucoes=1000):
         instrucoes_executadas = 0

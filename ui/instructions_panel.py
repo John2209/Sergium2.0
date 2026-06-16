@@ -1,12 +1,10 @@
 # define a tabela de instruções
-# mostra rótulo, mnemônico, operando e destaca a instrução atual durante a execução
+# mostra rótulo, mnemônico, operando
 
 import customtkinter as ctk
 from tkinter import ttk
 
-
 _ESTILO_APLICADO = False  # garante que o estilo ttk só é aplicado uma vez
-
 
 def _aplicar_estilo_treeview():  # aplica o estilo visual usado pela tabela
     global _ESTILO_APLICADO
@@ -50,6 +48,7 @@ class InstructionsPanel(ctk.CTkFrame):
         self._criar_widgets()       # cria a tabela e a barra de rolagem
         self._configurar_layout()   # posiciona os elementos na grade
 
+
     def _criar_widgets(self):
         self.titulo = ctk.CTkLabel(self, text="Instruções", font=("Segoe UI", 14, "bold"))
 
@@ -77,6 +76,7 @@ class InstructionsPanel(ctk.CTkFrame):
 
         self.tree.bind("<Configure>", self._redistribuir_colunas)
 
+
     def _configurar_layout(self):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -85,21 +85,19 @@ class InstructionsPanel(ctk.CTkFrame):
         self.tree.grid(row=1, column=0, sticky="nsew", padx=(12, 0), pady=(0, 10))
         self.scrollbar.grid(row=1, column=1, sticky="ns", padx=(0, 8), pady=(0, 10))
 
-    # ─────────────────────────────────────────────
-    # api pública
-    # ─────────────────────────────────────────────
-
+    # ===============
+    # api
+    # ==============
     def carregar(self, instrucoes: dict):
-        """
-        preenche a tabela com o programa montado.
-        instrucoes: dicionário {rótulo: (mnemonico, operando)} igual ao que a cpu usa.
-        """
+        # preenche a tabela com o programa montado.
+        # instrucoes: dicionário {rótulo: (mnemonico, operando)} igual ao que a cpu usa.
         self._limpar()
         for rotulo, (mnemonico, operando) in instrucoes.items():
             self.tree.insert("", "end", iid=rotulo, values=(rotulo, mnemonico, operando))  # adiciona uma linha por instrução
 
+
     def atualizar(self, snapshot):
-        """destaca a linha apontada pelo pc atual."""
+        # destaca a linha apontada pelo pc atual
         # remove destaque anterior
         if self._item_atual and self.tree.exists(self._item_atual):
             self.tree.item(self._item_atual, tags=())
@@ -112,20 +110,21 @@ class InstructionsPanel(ctk.CTkFrame):
         else:
             self._item_atual = None
 
+
     def resetar(self):
-        """limpa a tabela e remove destaques."""
+        # limpa a tabela e remove destaques
         self._limpar()
 
-    # ─────────────────────────────────────────────
+    # =============================================
     # interno
-    # ─────────────────────────────────────────────
-
+    # =============================================
     def _redistribuir_colunas(self, event=None):
         largura_total = self.tree.winfo_width()  # largura real da tabela
         largura_fixa  = 70 + 70     # rotulo + operando
         largura_livre = largura_total - largura_fixa - 20   # 20 para a scrollbar
         if largura_livre > 0:
             self.tree.column("mnemonico", width=largura_livre)  # deixa o mnemônico ocupar o espaço restante
+
 
     def _limpar(self):
         self._item_atual = None
