@@ -1,4 +1,4 @@
-# Instruções reconhecidas pelo simulador Sergium.
+# instruções reconhecidas pelo simulador Sergium
 
 import re
 

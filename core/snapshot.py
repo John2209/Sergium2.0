@@ -7,18 +7,18 @@ class Snapshot:
     auxs: list[int]
     mem: list[int]
 
-    # Flags da CPU
+    # flags da CPU
     z: int
     p: int
 
-    # Estado de entrada e saída
+    # estado de entrada e saída
     entrada: int | None
     saida: int | None
 
-    # Estado de execução
+    # estado de execução
     finalizado: bool
 
-    # Instrução atual apontada pelo PC
+    # instrução atual apontada pelo pc
     rotulo_atual: str | None
     mnemonico_atual: str | None
     operando_atual: str | None
