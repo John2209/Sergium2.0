@@ -1,26 +1,24 @@
 # Define o painel de registradores
-# Mostra AC, AUX0–AUX3, Z, P, PC
+# Mostra PC, AC, Z, P e AUX0–AUX3 em cards compactos organizados em duas colunas
 
 import customtkinter as ctk
 
 
 class RegistersPanel(ctk.CTkFrame):
-    COR_NORMAL = ("gray14", "gray14")
-    COR_MUDOU  = ("#7B4F00", "#7B4F00")
+    COR_CARD = "#222222"
+    COR_CARD_MUDOU = "#33280F"
+
+    COR_BORDA = "#3A3A3A"
+    COR_BORDA_MUDOU = "#D99A24"
+
+    COR_ROTULO = "#9AA0A6"
+    COR_VALOR = "#F1F3F4"
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
         self._valores_anteriores = {}
         self._labels = {}
-
-        self._criar_widgets()
-        self._configurar_layout()
-
-    def _criar_widgets(self):
-        self.titulo = ctk.CTkLabel(self, text="Registradores", font=("Segoe UI", 14, "bold"))
-
-        self.container = ctk.CTkFrame(self, fg_color="transparent")
 
         self._campos = [
             ("pc",   "PC"),
@@ -33,42 +31,108 @@ class RegistersPanel(ctk.CTkFrame):
             ("aux3", "AUX3"),
         ]
 
+        self._criar_widgets()
+        self._configurar_layout()
+
+    def _criar_widgets(self):
+        self.titulo = ctk.CTkLabel(
+            self,
+            text="Registradores",
+            font=("Segoe UI", 13, "bold"),
+        )
+
+        # ScrollableFrame evita que os cards sumam quando a janela fica baixa.
+        self.container = ctk.CTkScrollableFrame(
+            self,
+            fg_color="transparent",
+            corner_radius=0,
+            scrollbar_button_color="#444444",
+            scrollbar_button_hover_color="#555555",
+        )
+
         for chave, rotulo in self._campos:
-            celula = ctk.CTkFrame(self.container, corner_radius=6)
+            card = ctk.CTkFrame(
+                self.container,
+                corner_radius=8,
+                fg_color=self.COR_CARD,
+                border_width=1,
+                border_color=self.COR_BORDA,
+            )
 
             lbl_nome = ctk.CTkLabel(
-                celula,
+                card,
                 text=rotulo,
-                font=("Courier New", 11, "bold"),
-                text_color="gray60",
+                font=("Courier New", 10, "bold"),
+                text_color=self.COR_ROTULO,
+                anchor="w",
             )
+
             lbl_valor = ctk.CTkLabel(
-                celula,
+                card,
                 text="0",
-                font=("Courier New", 11),
+                font=("Courier New", 11, "bold"),
+                text_color=self.COR_VALOR,
+                anchor="e",
             )
 
-            celula.grid_columnconfigure(0, weight=1)
-            celula.grid_columnconfigure(1, weight=1)
+            card.grid_columnconfigure(0, weight=1)
+            card.grid_columnconfigure(1, weight=1)
 
-            lbl_nome.grid(row=0, column=0, padx=(4, 2), pady=8, sticky="w")
-            lbl_valor.grid(row=0, column=1, padx=(2, 4), pady=8, sticky="e")
+            lbl_nome.grid(
+                row=0,
+                column=0,
+                sticky="w",
+                padx=(8, 4),
+                pady=5,
+            )
 
-            self._labels[chave] = (lbl_nome, lbl_valor, celula)
+            lbl_valor.grid(
+                row=0,
+                column=1,
+                sticky="e",
+                padx=(4, 8),
+                pady=5,
+            )
+
+            self._labels[chave] = (lbl_nome, lbl_valor, card)
 
     def _configurar_layout(self):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.titulo.grid(row=0, column=0, sticky="w", padx=16, pady=(12, 6))
-        self.container.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self.titulo.grid(
+            row=0,
+            column=0,
+            sticky="w",
+            padx=16,
+            pady=(10, 4),
+        )
+
+        self.container.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=12,
+            pady=(0, 10),
+        )
 
         self.container.grid_columnconfigure(0, weight=1)
+        self.container.grid_columnconfigure(1, weight=1)
 
         for i, (chave, _) in enumerate(self._campos):
-            self.container.grid_rowconfigure(i, weight=1)
-            _, _, celula = self._labels[chave]
-            celula.grid(row=i, column=0, padx=3, pady=3, sticky="nsew")
+            linha = i // 2
+            coluna = i % 2
+
+            self.container.grid_rowconfigure(linha, weight=0)
+
+            _, _, card = self._labels[chave]
+            card.grid(
+                row=linha,
+                column=coluna,
+                sticky="ew",
+                padx=3,
+                pady=3,
+            )
 
     # ─────────────────────────────────────────────
     # API pública
@@ -87,17 +151,32 @@ class RegistersPanel(ctk.CTkFrame):
         }
 
         for chave, valor in novos.items():
-            _, lbl_valor, celula = self._labels[chave]
+            _, lbl_valor, card = self._labels[chave]
             lbl_valor.configure(text=str(valor))
 
             mudou = self._valores_anteriores.get(chave) != valor
-            celula.configure(fg_color=self.COR_MUDOU if mudou else self.COR_NORMAL)
+
+            if mudou:
+                card.configure(
+                    fg_color=self.COR_CARD_MUDOU,
+                    border_color=self.COR_BORDA_MUDOU,
+                )
+            else:
+                card.configure(
+                    fg_color=self.COR_CARD,
+                    border_color=self.COR_BORDA,
+                )
 
         self._valores_anteriores = novos
 
     def resetar(self):
         self._valores_anteriores = {}
+
         for chave, _ in self._campos:
-            _, lbl_valor, celula = self._labels[chave]
+            _, lbl_valor, card = self._labels[chave]
+
             lbl_valor.configure(text="0")
-            celula.configure(fg_color=self.COR_NORMAL)
+            card.configure(
+                fg_color=self.COR_CARD,
+                border_color=self.COR_BORDA,
+            )
