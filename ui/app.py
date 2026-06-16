@@ -362,8 +362,22 @@ class App(ctk.CTk):
         if largura <= 0:
             return
 
-        posicao = max(620, largura - LARGURA_MINIMA_LATERAL)
+        posicao = self._calcular_posicao_divisor_principal(largura)
         self.divisor_principal.sash_place(0, posicao, 0)
+
+
+    def _calcular_posicao_divisor_principal(self, largura, ratio=None):
+        limite_lateral = max(0, largura - LARGURA_MINIMA_LATERAL)
+
+        if ratio is None:
+            posicao = limite_lateral
+        else:
+            posicao = int(largura * ratio)
+
+        if largura >= 620 + LARGURA_MINIMA_LATERAL:
+            posicao = max(620, posicao)
+
+        return min(posicao, limite_lateral)
 
 
     def _ajustar_divisor_lateral(self):
@@ -402,8 +416,6 @@ class App(ctk.CTk):
 
     def _conectar_eventos_layout(self):
         # quando o usuário solta um divisor, se salva a posição atual
-        self.divisor_principal.bind("<Button-1>", self._bloquear_divisor_principal)
-        self.divisor_principal.bind("<B1-Motion>", self._bloquear_divisor_principal)
         self.divisor_principal.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
         self.divisor_esquerdo.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
         self.divisor_lateral.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
@@ -418,10 +430,6 @@ class App(ctk.CTk):
         # no windows, janela maximizada normalmente aparece como zoomed
         # tratamos como tela cheia
         return "maximizado" if self.state() == "zoomed" else "janela"
-
-    def _bloquear_divisor_principal(self, event=None):
-        self._ajustar_divisor_principal()
-        return "break"
 
     def _ao_soltar_divisor(self, event=None):
         # espera o tk terminar de atualizar a posição visual do divisor
@@ -496,7 +504,10 @@ class App(ctk.CTk):
 
             largura_principal = self.area_principal.winfo_width()
             if largura_principal > 0:
-                x_principal = max(620, largura_principal - LARGURA_MINIMA_LATERAL)
+                x_principal = self._calcular_posicao_divisor_principal(
+                    largura_principal,
+                    ratios["principal"]
+                )
                 self.divisor_principal.sash_place(0, x_principal, 0)
 
             self.update_idletasks()

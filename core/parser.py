@@ -25,12 +25,17 @@ class Parser:
             for i, (numero_linha, linha) in enumerate(linhas_validas):  # percorre as instruções válidas em ordem
                 partes = linha.split('|')                               # separa em: rótulo | mnemônico | operando
 
-                if len(partes) != 3:                                    # uma instrução precisa ter exatamente 3 partes
+                if len(partes) == 3:
+                    rotulo_bruto, mnemonico_bruto, operando_bruto = partes
+                elif len(partes) == 2:
+                    rotulo_bruto = ""
+                    mnemonico_bruto, operando_bruto = partes
+                else:
                     raise ParserError(f"Linha {numero_linha} inválida: {linha}")
 
-                rotulo = partes[0].strip().upper()              # remove espaços e padroniza o rótulo
-                mnemonico = normalizar_mnemonico(partes[1])     # padroniza o mnemônico para o formato oficial
-                operando = partes[2].strip().upper()            # remove espaços e padroniza o operando
+                rotulo = rotulo_bruto.strip().upper()              # remove espaços e padroniza o rótulo
+                mnemonico = normalizar_mnemonico(mnemonico_bruto)  # padroniza o mnemônico para o formato oficial
+                operando = operando_bruto.strip().upper()          # remove espaços e padroniza o operando
 
                 if mnemonico not in INSTRUCOES_VALIDAS:  # verifica se a instrução existe no Sergium
                     raise ParserError(f"Linha {numero_linha}: instrução desconhecida: {mnemonico}")
