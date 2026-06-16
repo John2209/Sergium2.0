@@ -1,15 +1,15 @@
-# Define o painel do terminal
-# Exibe logs, erros, entrada e saída do programa
+# define o painel do terminal
+# exibe logs, erros, entrada e saída do programa
 
 import customtkinter as ctk
 
 
 class TerminalPanel(ctk.CTkFrame):
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, **kwargs):  # inicializa o painel do terminal
         super().__init__(master, **kwargs)
-        self._criar_widgets()
-        self._configurar_layout()
+        self._criar_widgets()      # cria área de log, entrada e saída
+        self._configurar_layout()  # posiciona os elementos na grade
 
     def _criar_widgets(self):
         self.titulo = ctk.CTkLabel(
@@ -18,7 +18,7 @@ class TerminalPanel(ctk.CTkFrame):
             font=("Segoe UI", 13, "bold"),
         )
 
-        # ── Log ──────────────────────────────────────
+        # ── log ──────────────────────────────────────
         self.texto = ctk.CTkTextbox(
             self,
             state="disabled",
@@ -32,7 +32,7 @@ class TerminalPanel(ctk.CTkFrame):
         self.texto._textbox.tag_configure("saida", foreground="#6BCB77")
         self.texto._textbox.tag_configure("info",  foreground="#A8DADC")
 
-        # ── Barra inferior: entrada + saída ───────────
+        # ── barra inferior: entrada + saída ───────────
         self.barra_inferior = ctk.CTkFrame(
             self,
             fg_color="transparent",
@@ -88,7 +88,7 @@ class TerminalPanel(ctk.CTkFrame):
             text_color="#6BCB77",
         )
 
-        self._callback_entrada = None
+        self._callback_entrada = None  # função chamada quando o usuário envia entrada
 
     def _configurar_layout(self):
         self.grid_rowconfigure(1, weight=1)
@@ -132,20 +132,20 @@ class TerminalPanel(ctk.CTkFrame):
         self.valor_saida.grid(row=0, column=1)
 
     # ─────────────────────────────────────────────
-    # API pública
+    # api pública
     # ─────────────────────────────────────────────
 
     def definir_callback_entrada(self, fn):
-        """Registra a função chamada quando o usuário envia um valor de entrada."""
+        """registra a função chamada quando o usuário envia um valor de entrada."""
         self._callback_entrada = fn
 
     def get_entrada(self) -> str | None:
-        """Retorna o valor atual do campo de entrada, ou None se vazio."""
+        """retorna o valor atual do campo de entrada, ou None se vazio."""
         valor = self.campo_entrada.get().strip()
         return valor if valor else None
 
     def mostrar_saida(self, valor):
-        """Atualiza o label de saída e registra no log."""
+        """atualiza o label de saída e registra no log."""
         self.valor_saida.configure(text=str(valor))
         self.saida(f"Saída: {valor}")
 
@@ -168,22 +168,22 @@ class TerminalPanel(ctk.CTkFrame):
         self.resetar_saida()
 
     # ─────────────────────────────────────────────
-    # Interno
+    # interno
     # ─────────────────────────────────────────────
 
     def _enviar_entrada(self):
-        valor = self.campo_entrada.get().strip()
+        valor = self.campo_entrada.get().strip()  # remove espaços antes de validar
         if not valor:
             return
 
         self.log(f"Entrada definida: {valor}")
-        self.campo_entrada.delete(0, "end")
+        self.campo_entrada.delete(0, "end")  # limpa o campo depois do envio
 
         if self._callback_entrada:
-            self._callback_entrada(valor)
+            self._callback_entrada(valor)  # entrega o valor para a app
 
     def _escrever(self, texto: str, tag: str):
         self.texto.configure(state="normal")
-        self.texto._textbox.insert("end", texto, tag)
-        self.texto.see("end")
+        self.texto._textbox.insert("end", texto, tag)  # escreve usando a cor da tag
+        self.texto.see("end")  # rola para a última linha
         self.texto.configure(state="disabled")

@@ -1,5 +1,5 @@
-# Ponto de entrada da interface gráfica
-# Inicialização da aplicação
+# ponto de entrada da interface gráfica
+# inicialização da aplicação
 
 import customtkinter as ctk
 import tkinter as tk
@@ -9,18 +9,20 @@ import os
 
 from ui import RegistersPanel, EditorPanel, InstructionsPanel, TerminalPanel, MemoryPanel
 
+LARGURA_MINIMA_LATERAL = 320
+
 
 class App(ctk.CTk):
 
     def __init__(self, minha_cpu):
         super().__init__()
 
-        self.minha_cpu = minha_cpu
-        self._instrucoes_montadas = None
-        self._caminho_arquivo = None
+        self.minha_cpu = minha_cpu              # cpu usada pela interface
+        self._instrucoes_montadas = None        # programa montado no momento
+        self._caminho_arquivo = None            # caminho do arquivo aberto ou salvo
 
-        # Estado dos divisores redimensionáveis da interface.
-        # Guardamos proporções, não pixels, para funcionar bem em janela e tela cheia.
+        # estado dos divisores redimensionáveis da interface
+        # guardamos proporções, não pixels, para funcionar bem em janela e tela cheia
         self._estado_layout_atual = "janela"
         self._ratios_layout = {}
         self._aplicando_layout_salvo = False
@@ -41,7 +43,7 @@ class App(ctk.CTk):
         self.geometry("1180x700")
         self.minsize(1000, 620)
 
-        # Fundo geral mais escuro para os painéis parecerem blocos flutuando
+        # fundo geral mais escuro para os painéis parecerem blocos flutuando
         self.configure(fg_color="#111111")
 
         self.grid_rowconfigure(1, weight=1)
@@ -49,7 +51,7 @@ class App(ctk.CTk):
 
     def criar_widgets(self):
         # =========================
-        # Cores principais
+        # cores principais
         # =========================
         cor_fundo = "#111111"
         cor_toolbar = "#242424"
@@ -62,7 +64,7 @@ class App(ctk.CTk):
         cor_reset_hover = "#E53935"
 
         # =========================
-        # Containers principais
+        # containers principais
         # =========================
         self.toolbar = ctk.CTkFrame(
             self,
@@ -119,7 +121,7 @@ class App(ctk.CTk):
         )
 
         # =========================
-        # Botões da toolbar
+        # botões da toolbar
         # =========================
         self.botao_abrir = ctk.CTkButton(
             self.toolbar,
@@ -185,7 +187,7 @@ class App(ctk.CTk):
         )
 
         # =========================
-        # Painéis
+        # painéis
         # =========================
         self.painel_editor = EditorPanel(
             self.divisor_esquerdo,
@@ -219,7 +221,7 @@ class App(ctk.CTk):
 
     def configurar_layout(self):
         # =========================
-        # Layout geral da janela
+        # layout geral da janela
         # =========================
         self.toolbar.grid(
             row=0,
@@ -238,7 +240,7 @@ class App(ctk.CTk):
         )
 
         # =========================
-        # Layout da toolbar
+        # layout da toolbar
         # =========================
         self.botao_abrir.grid(row=0, column=0, padx=(8, 4), pady=8)
         self.botao_salvar.grid(row=0, column=1, padx=4, pady=8)
@@ -248,7 +250,7 @@ class App(ctk.CTk):
         self.botao_reset.grid(row=0, column=5, padx=4, pady=8)
 
         # =========================
-        # Layout da área principal
+        # layout da área principal
         # =========================
         self.area_principal.grid_rowconfigure(0, weight=1)
         self.area_principal.grid_columnconfigure(0, weight=1)
@@ -264,19 +266,21 @@ class App(ctk.CTk):
             minsize=620,
             padx=2,
             pady=0,
+            stretch="always",
             sticky="nsew",
         )
 
         self.divisor_principal.add(
             self.painel_lateral,
-            minsize=320,
+            minsize=LARGURA_MINIMA_LATERAL,
             padx=2,
             pady=0,
+            stretch="never",
             sticky="nsew",
         )
 
         # =========================
-        # Coluna esquerda: editor + terminal
+        # coluna esquerda: editor + terminal
         # =========================
         self.area_esquerda.grid_rowconfigure(0, weight=1)
         self.area_esquerda.grid_columnconfigure(0, weight=1)
@@ -304,7 +308,7 @@ class App(ctk.CTk):
         )
 
         # =========================
-        # Coluna direita: instruções + registradores + memória
+        # coluna direita: instruções + registradores + memória
         # =========================
         self.painel_lateral.grid_rowconfigure(0, weight=1)
         self.painel_lateral.grid_columnconfigure(0, weight=1)
@@ -358,7 +362,7 @@ class App(ctk.CTk):
         if largura <= 0:
             return
 
-        posicao = int(largura * 0.58)
+        posicao = max(620, largura - LARGURA_MINIMA_LATERAL)
         self.divisor_principal.sash_place(0, posicao, 0)
 
     def _ajustar_divisor_lateral(self):
@@ -393,28 +397,34 @@ class App(ctk.CTk):
         self.botao_reset.configure(state=estado_reset)
 
     def _conectar_eventos_layout(self):
-        # Quando o usuário solta um divisor, salvamos a proporção atual.
+        # quando o usuário solta um divisor, salvamos a proporção atual
+        self.divisor_principal.bind("<Button-1>", self._bloquear_divisor_principal)
+        self.divisor_principal.bind("<B1-Motion>", self._bloquear_divisor_principal)
         self.divisor_principal.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
         self.divisor_esquerdo.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
         self.divisor_lateral.bind("<ButtonRelease-1>", self._ao_soltar_divisor)
 
-        # Detecta troca entre modo janela e maximizado.
+        # detecta troca entre modo janela e maximizado
         self.bind("<Configure>", self._ao_configurar_janela)
 
-        # Depois que os divisores iniciais forem posicionados, salva o layout inicial de janela.
+        # depois que os divisores iniciais forem posicionados, salva o layout inicial de janela
         self.after(200, self._salvar_layout_atual)
 
     def _estado_visual_janela(self):
-        # No Windows, janela maximizada normalmente aparece como "zoomed".
-        # Para o nosso caso, tratamos isso como tela cheia/maximizado.
+        # no windows, janela maximizada normalmente aparece como "zoomed"
+        # para o nosso caso, tratamos isso como tela cheia/maximizado
         return "maximizado" if self.state() == "zoomed" else "janela"
 
+    def _bloquear_divisor_principal(self, event=None):
+        self._ajustar_divisor_principal()
+        return "break"
+
     def _ao_soltar_divisor(self, event=None):
-        # Espera o Tk terminar de atualizar a posição visual do divisor.
+        # espera o tk terminar de atualizar a posição visual do divisor
         self.after(50, self._salvar_layout_atual)
 
     def _ao_configurar_janela(self, event=None):
-        # Ignora eventos de widgets internos. Queremos só mudanças da janela principal.
+        # ignora eventos de widgets internos; queremos só mudanças da janela principal
         if event is not None and event.widget is not self:
             return
 
@@ -429,8 +439,8 @@ class App(ctk.CTk):
             self.after(100, lambda: self._aplicar_layout_salvo(self._ratios_layout[novo_estado]))
             return
 
-        # Primeira vez entrando em maximizado:
-        # aplica uma distribuição usual, confortável para apresentação.
+        # primeira vez entrando em maximizado:
+        # aplica uma distribuição usual, confortável para apresentação
         if novo_estado == "maximizado":
             ratios_padrao = {
                 "principal": 0.58,
@@ -470,7 +480,7 @@ class App(ctk.CTk):
             }
 
         except tk.TclError:
-            # Pode acontecer durante a criação inicial da janela.
+            # pode acontecer durante a criação inicial da janela
             return
 
     def _aplicar_layout_salvo(self, ratios):
@@ -481,7 +491,7 @@ class App(ctk.CTk):
 
             largura_principal = self.area_principal.winfo_width()
             if largura_principal > 0:
-                x_principal = int(largura_principal * ratios["principal"])
+                x_principal = max(620, largura_principal - LARGURA_MINIMA_LATERAL)
                 self.divisor_principal.sash_place(0, x_principal, 0)
 
             self.update_idletasks()
@@ -507,7 +517,7 @@ class App(ctk.CTk):
         self._salvar_layout_atual()
 
     # ─────────────────────────────────────────────
-    # Atualização da UI
+    # atualização da ui
     # ─────────────────────────────────────────────
 
     def _atualizar_ui(self):
@@ -529,7 +539,7 @@ class App(ctk.CTk):
             self.painel_terminal.log("Programa finalizado.")
 
     # ─────────────────────────────────────────────
-    # Ações dos botões
+    # ações dos botões
     # ─────────────────────────────────────────────
 
     def _acao_abrir(self):
@@ -545,18 +555,18 @@ class App(ctk.CTk):
         with open(caminho, "r", encoding="utf-8") as f:
             self.painel_editor.set_texto(f.read())
 
-        # Ao abrir um novo arquivo, o programa anterior deixa de ser válido.
+        # ao abrir um novo arquivo, o programa anterior deixa de ser válido
         self._instrucoes_montadas = None
         self.minha_cpu.resetar()
 
-        # Reseta os painéis visuais ligados à execução anterior.
+        # reseta os painéis visuais ligados à execução anterior
         self.painel_instrucoes.resetar()
         self.painel_registradores.resetar()
         self.painel_memoria.resetar()
         self.painel_editor.resetar_destaque()
         self.painel_terminal.limpar()
 
-        # Atualiza os botões: Run, Step e Reset voltam a ficar desativados.
+        # atualiza os botões: run, step e reset voltam a ficar desativados
         self._atualizar_estado_botoes()
 
         self.painel_terminal.log(f"Arquivo aberto: {caminho}")
@@ -582,7 +592,7 @@ class App(ctk.CTk):
             self.painel_terminal.erro("Editor vazio. Escreva um programa antes de montar.")
             return
 
-        # Parser lê arquivos, então salva em temporário
+        # parser lê arquivos, então salva em temporário
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".srg", delete=False, encoding="utf-8"
         ) as tmp:
@@ -637,7 +647,7 @@ class App(ctk.CTk):
             self._atualizar_estado_botoes()
 
     def _acao_entrada(self, valor: str):
-        """Chamado pelo terminal quando o usuário envia um valor de entrada."""
+        """chamado pelo terminal quando o usuário envia um valor de entrada."""
         try:
             self.minha_cpu.definir_entrada(valor)
         except Exception as e:

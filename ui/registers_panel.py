@@ -1,5 +1,5 @@
-# Define o painel de registradores
-# Mostra PC, AC, Z, P e AUX0–AUX3 em cards compactos organizados em duas colunas
+# define o painel de registradores
+# mostra pc, ac, z, p e aux0–aux3 em cards compactos organizados em duas colunas
 
 import customtkinter as ctk
 
@@ -14,13 +14,13 @@ class RegistersPanel(ctk.CTkFrame):
     COR_ROTULO = "#9AA0A6"
     COR_VALOR = "#F1F3F4"
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, **kwargs):  # inicializa o painel de registradores
         super().__init__(master, **kwargs)
 
-        self._valores_anteriores = {}
-        self._labels = {}
+        self._valores_anteriores = {}  # guarda valores anteriores para destacar mudanças
+        self._labels = {}              # guarda labels e cards por chave de registrador
 
-        self._campos = [
+        self._campos = [  # lista dos campos exibidos no painel
             ("pc",   "PC"),
             ("ac",   "AC"),
             ("z",    "Z"),
@@ -31,8 +31,8 @@ class RegistersPanel(ctk.CTkFrame):
             ("aux3", "AUX3"),
         ]
 
-        self._criar_widgets()
-        self._configurar_layout()
+        self._criar_widgets()      # cria os cards de registradores
+        self._configurar_layout()  # organiza os cards em duas colunas
 
     def _criar_widgets(self):
         self.titulo = ctk.CTkLabel(
@@ -41,7 +41,7 @@ class RegistersPanel(ctk.CTkFrame):
             font=("Segoe UI", 13, "bold"),
         )
 
-        # ScrollableFrame evita que os cards sumam quando a janela fica baixa.
+        # scrollableframe evita que os cards sumam quando a janela fica baixa.
         self.container = ctk.CTkScrollableFrame(
             self,
             fg_color="transparent",
@@ -94,7 +94,7 @@ class RegistersPanel(ctk.CTkFrame):
                 pady=5,
             )
 
-            self._labels[chave] = (lbl_nome, lbl_valor, card)
+            self._labels[chave] = (lbl_nome, lbl_valor, card)  # guarda referências para atualizar depois
 
     def _configurar_layout(self):
         self.grid_rowconfigure(1, weight=1)
@@ -135,11 +135,11 @@ class RegistersPanel(ctk.CTkFrame):
             )
 
     # ─────────────────────────────────────────────
-    # API pública
+    # api pública
     # ─────────────────────────────────────────────
 
     def atualizar(self, snapshot):
-        novos = {
+        novos = {  # monta os valores atuais vindos da cpu
             "pc":   snapshot.pc,
             "ac":   snapshot.ac,
             "z":    snapshot.z,
@@ -154,7 +154,7 @@ class RegistersPanel(ctk.CTkFrame):
             _, lbl_valor, card = self._labels[chave]
             lbl_valor.configure(text=str(valor))
 
-            mudou = self._valores_anteriores.get(chave) != valor
+            mudou = self._valores_anteriores.get(chave) != valor  # compara com a última atualização
 
             if mudou:
                 card.configure(
@@ -167,10 +167,10 @@ class RegistersPanel(ctk.CTkFrame):
                     border_color=self.COR_BORDA,
                 )
 
-        self._valores_anteriores = novos
+        self._valores_anteriores = novos  # guarda os valores para a próxima comparação
 
     def resetar(self):
-        self._valores_anteriores = {}
+        self._valores_anteriores = {}  # limpa o histórico de mudanças
 
         for chave, _ in self._campos:
             _, lbl_valor, card = self._labels[chave]

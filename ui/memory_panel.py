@@ -1,5 +1,5 @@
-# Define o painel de memória
-# Mostra os endereços e seus valores; destaca células alteradas
+# define o painel de memória
+# mostra os endereços e seus valores; destaca células alteradas
 
 import customtkinter as ctk
 from tkinter import ttk
@@ -7,14 +7,14 @@ from tkinter import ttk
 
 class MemoryPanel(ctk.CTkFrame):
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, **kwargs):  # inicializa o painel de memória
         super().__init__(master, **kwargs)
 
-        self._mem_anterior = [0] * 256
+        self._mem_anterior = [0] * 256  # guarda a memória anterior para detectar mudanças
 
-        self._criar_widgets()
-        self._configurar_layout()
-        self._popular_tabela()
+        self._criar_widgets()      # cria a tabela e a barra de rolagem
+        self._configurar_layout()  # posiciona os elementos na grade
+        self._popular_tabela()     # cria as linhas fixas da memória
 
     def _criar_widgets(self):
         self.titulo = ctk.CTkLabel(
@@ -115,7 +115,7 @@ class MemoryPanel(ctk.CTkFrame):
         )
 
     def _popular_tabela(self):
-        """Cria as 256 linhas uma única vez; atualizar() só muda os valores."""
+        """cria as 256 linhas uma única vez; atualizar() só muda os valores."""
         for i in range(256):
             self.tree.insert(
                 "",
@@ -125,16 +125,16 @@ class MemoryPanel(ctk.CTkFrame):
             )
 
     # ─────────────────────────────────────────────
-    # API pública
+    # api pública
     # ─────────────────────────────────────────────
 
     def atualizar(self, snapshot):
-        """Atualiza apenas as células cujo valor mudou e destaca em amarelo."""
+        """atualiza apenas as células cujo valor mudou e destaca em amarelo."""
         for i, valor in enumerate(snapshot.mem):
-            anterior = self._mem_anterior[i]
+            anterior = self._mem_anterior[i]  # valor anterior no mesmo endereço
 
             if valor != anterior:
-                tag = "alterado" if valor != 0 else ""
+                tag = "alterado" if valor != 0 else ""  # destaca apenas valores diferentes de zero
 
                 self.tree.item(
                     str(i),
@@ -142,10 +142,10 @@ class MemoryPanel(ctk.CTkFrame):
                     tags=(tag,),
                 )
 
-        self._mem_anterior = snapshot.mem.copy()
+        self._mem_anterior = snapshot.mem.copy()  # guarda uma cópia para a próxima comparação
 
     def resetar(self):
-        """Volta todos os endereços para 0 e remove destaques."""
+        """volta todos os endereços para 0 e remove destaques."""
         for i in range(256):
             self.tree.item(
                 str(i),
@@ -153,4 +153,4 @@ class MemoryPanel(ctk.CTkFrame):
                 tags=(),
             )
 
-        self._mem_anterior = [0] * 256
+        self._mem_anterior = [0] * 256  # reinicia o estado usado para comparação

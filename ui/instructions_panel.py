@@ -1,5 +1,5 @@
-# Define a tabela de instruções
-# Mostra rótulo, mnemônico, operando e destaca a instrução atual durante a execução
+# define a tabela de instruções
+# mostra rótulo, mnemônico, operando e destaca a instrução atual durante a execução
 
 import customtkinter as ctk
 from tkinter import ttk
@@ -8,7 +8,7 @@ from tkinter import ttk
 _ESTILO_APLICADO = False  # garante que o estilo ttk só é aplicado uma vez
 
 
-def _aplicar_estilo_treeview():
+def _aplicar_estilo_treeview():  # aplica o estilo visual usado pela tabela
     global _ESTILO_APLICADO
     if _ESTILO_APLICADO:
         return
@@ -38,17 +38,17 @@ def _aplicar_estilo_treeview():
         foreground=[("selected", "#ffffff")],
     )
 
-    _ESTILO_APLICADO = True
+    _ESTILO_APLICADO = True  # marca o estilo como configurado
 
 
 class InstructionsPanel(ctk.CTkFrame):
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, **kwargs):  # inicializa o painel de instruções
         super().__init__(master, **kwargs)
         _aplicar_estilo_treeview()
         self._item_atual = None     # id do item destacado no momento
-        self._criar_widgets()
-        self._configurar_layout()
+        self._criar_widgets()       # cria a tabela e a barra de rolagem
+        self._configurar_layout()   # posiciona os elementos na grade
 
     def _criar_widgets(self):
         self.titulo = ctk.CTkLabel(self, text="Instruções", font=("Segoe UI", 14, "bold"))
@@ -69,7 +69,7 @@ class InstructionsPanel(ctk.CTkFrame):
         self.tree.column("mnemonico", width=200, minwidth=100, anchor="w", stretch=True)
         self.tree.column("operando", width=62, minwidth=55, anchor="center", stretch=False)
 
-        # tag para a instrução apontada pelo PC
+        # tag para a instrução apontada pelo pc
         self.tree.tag_configure("atual", background="#1a3a6a", foreground="#ffffff")
 
         self.scrollbar = ctk.CTkScrollbar(self, command=self.tree.yview)
@@ -86,25 +86,25 @@ class InstructionsPanel(ctk.CTkFrame):
         self.scrollbar.grid(row=1, column=1, sticky="ns", padx=(0, 8), pady=(0, 10))
 
     # ─────────────────────────────────────────────
-    # API pública
+    # api pública
     # ─────────────────────────────────────────────
 
     def carregar(self, instrucoes: dict):
         """
-        Preenche a tabela com o programa montado.
-        instrucoes: dicionário {rótulo: (mnemonico, operando)} igual ao que a CPU usa.
+        preenche a tabela com o programa montado.
+        instrucoes: dicionário {rótulo: (mnemonico, operando)} igual ao que a cpu usa.
         """
         self._limpar()
         for rotulo, (mnemonico, operando) in instrucoes.items():
-            self.tree.insert("", "end", iid=rotulo, values=(rotulo, mnemonico, operando))
+            self.tree.insert("", "end", iid=rotulo, values=(rotulo, mnemonico, operando))  # adiciona uma linha por instrução
 
     def atualizar(self, snapshot):
-        """Destaca a linha apontada pelo PC atual."""
+        """destaca a linha apontada pelo pc atual."""
         # remove destaque anterior
         if self._item_atual and self.tree.exists(self._item_atual):
             self.tree.item(self._item_atual, tags=())
 
-        rotulo = snapshot.rotulo_atual
+        rotulo = snapshot.rotulo_atual  # rótulo da instrução atual no snapshot
         if rotulo and self.tree.exists(rotulo):
             self.tree.item(rotulo, tags=("atual",))
             self.tree.see(rotulo)   # rola para manter a linha visível
@@ -113,21 +113,21 @@ class InstructionsPanel(ctk.CTkFrame):
             self._item_atual = None
 
     def resetar(self):
-        """Limpa a tabela e remove destaques."""
+        """limpa a tabela e remove destaques."""
         self._limpar()
 
     # ─────────────────────────────────────────────
-    # Interno
+    # interno
     # ─────────────────────────────────────────────
 
     def _redistribuir_colunas(self, event=None):
-        largura_total = self.tree.winfo_width()
+        largura_total = self.tree.winfo_width()  # largura real da tabela
         largura_fixa  = 70 + 70     # rotulo + operando
         largura_livre = largura_total - largura_fixa - 20   # 20 para a scrollbar
         if largura_livre > 0:
-            self.tree.column("mnemonico", width=largura_livre)
+            self.tree.column("mnemonico", width=largura_livre)  # deixa o mnemônico ocupar o espaço restante
 
     def _limpar(self):
         self._item_atual = None
         for item in self.tree.get_children():
-            self.tree.delete(item)
+            self.tree.delete(item)  # remove cada linha da tabela
