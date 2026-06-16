@@ -21,15 +21,15 @@ def _aplicar_estilo_treeview():
         background="#1e1e1e",
         foreground="#e0e0e0",
         fieldbackground="#1e1e1e",
-        rowheight=24,
-        font=("Courier New", 11),
+        rowheight=21,
+        font=("Courier New", 10),
         borderwidth=0,
     )
     style.configure(
         "Sergium.Treeview.Heading",
         background="#2a2a2a",
-        foreground="#888888",
-        font=("Segoe UI", 10, "bold"),
+        foreground="#9AA0A6",
+        font=("Segoe UI", 9, "bold"),
         relief="flat",
     )
     style.map(
@@ -65,9 +65,9 @@ class InstructionsPanel(ctk.CTkFrame):
         self.tree.heading("mnemonico", text="Mnemônico")
         self.tree.heading("operando",  text="Operando")
 
-        self.tree.column("rotulo",    width=70,  minwidth=70,  anchor="center", stretch=False)
-        self.tree.column("mnemonico", width=200, minwidth=100, anchor="w",      stretch=True)
-        self.tree.column("operando",  width=70,  minwidth=70,  anchor="center", stretch=False)
+        self.tree.column("rotulo", width=62, minwidth=55, anchor="center", stretch=False)
+        self.tree.column("mnemonico", width=200, minwidth=100, anchor="w", stretch=True)
+        self.tree.column("operando", width=62, minwidth=55, anchor="center", stretch=False)
 
         # tag para a instrução apontada pelo PC
         self.tree.tag_configure("atual", background="#1a3a6a", foreground="#ffffff")
@@ -81,9 +81,9 @@ class InstructionsPanel(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.titulo.grid(row=0, column=0, columnspan=2, sticky="w", padx=16, pady=(12, 6))
-        self.tree.grid(row=1, column=0, sticky="nsew", padx=(12, 0), pady=(0, 12))
-        self.scrollbar.grid(row=1, column=1, sticky="ns", padx=(0, 8), pady=(0, 12))
+        self.titulo.grid(row=0, column=0, columnspan=2, sticky="w", padx=16, pady=(8, 4))
+        self.tree.grid(row=1, column=0, sticky="nsew", padx=(12, 0), pady=(0, 10))
+        self.scrollbar.grid(row=1, column=1, sticky="ns", padx=(0, 8), pady=(0, 10))
 
     # ─────────────────────────────────────────────
     # API pública
