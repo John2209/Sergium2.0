@@ -120,6 +120,11 @@ class App(ctk.CTk):
         self.painel_instrucoes.atualizar(snap)
         self.painel_memoria.atualizar(snap)
 
+        if snap.finalizado:
+            self.painel_editor.destacar_linha(None)
+        elif snap.rotulo_atual is not None:
+            self.painel_editor.destacar_linha(snap.pc + 1)
+
         saida = self.minha_cpu.consumir_saida()
         if saida is not None:
             self.painel_terminal.mostrar_saida(saida)
