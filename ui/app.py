@@ -29,6 +29,7 @@ class App(ctk.CTk):
         self.criar_widgets()
         self.configurar_layout()
         self.conectar_botoes()
+        self._atualizar_estado_botoes()
         self._conectar_eventos_layout()
         self.painel_terminal.definir_callback_entrada(self._acao_entrada)
 
@@ -54,6 +55,12 @@ class App(ctk.CTk):
         cor_toolbar = "#242424"
         cor_painel = "#2B2B2B"
 
+        cor_botao = "#1F6AA5"
+        cor_botao_hover = "#2A7DBF"
+
+        cor_reset = "#C62828"
+        cor_reset_hover = "#E53935"
+
         # =========================
         # Containers principais
         # =========================
@@ -69,7 +76,6 @@ class App(ctk.CTk):
             fg_color=cor_fundo,
         )
 
-        # Divisor redimensionável entre coluna esquerda e coluna direita
         self.divisor_principal = tk.PanedWindow(
             self.area_principal,
             orient=tk.HORIZONTAL,
@@ -80,14 +86,12 @@ class App(ctk.CTk):
             showhandle=False,
         )
 
-        # Coluna esquerda: editor em cima, terminal embaixo
         self.area_esquerda = ctk.CTkFrame(
             self.divisor_principal,
             corner_radius=0,
             fg_color=cor_fundo,
         )
 
-        # Divisor redimensionável entre editor e terminal
         self.divisor_esquerdo = tk.PanedWindow(
             self.area_esquerda,
             orient=tk.VERTICAL,
@@ -98,14 +102,12 @@ class App(ctk.CTk):
             showhandle=False,
         )
 
-        # Coluna direita: instruções, registradores e memória
         self.painel_lateral = ctk.CTkFrame(
             self.divisor_principal,
             corner_radius=0,
             fg_color=cor_fundo,
         )
 
-        # Divisor redimensionável entre instruções, registradores e memória
         self.divisor_lateral = tk.PanedWindow(
             self.painel_lateral,
             orient=tk.VERTICAL,
@@ -119,12 +121,68 @@ class App(ctk.CTk):
         # =========================
         # Botões da toolbar
         # =========================
-        self.botao_abrir = ctk.CTkButton(self.toolbar, text="Abrir", width=80, corner_radius=8)
-        self.botao_salvar = ctk.CTkButton(self.toolbar, text="Salvar", width=80, corner_radius=8)
-        self.botao_montar = ctk.CTkButton(self.toolbar, text="Montar", width=80, corner_radius=8)
-        self.botao_run = ctk.CTkButton(self.toolbar, text="Run", width=80, corner_radius=8)
-        self.botao_step = ctk.CTkButton(self.toolbar, text="Step", width=80, corner_radius=8)
-        self.botao_reset = ctk.CTkButton(self.toolbar, text="Reset", width=80, corner_radius=8)
+        self.botao_abrir = ctk.CTkButton(
+            self.toolbar,
+            text="Abrir",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_botao,
+            hover_color=cor_botao_hover,
+        )
+
+        self.botao_salvar = ctk.CTkButton(
+            self.toolbar,
+            text="Salvar",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_botao,
+            hover_color=cor_botao_hover,
+        )
+
+        self.botao_montar = ctk.CTkButton(
+            self.toolbar,
+            text="Montar",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_botao,
+            hover_color=cor_botao_hover,
+        )
+
+        self.botao_run = ctk.CTkButton(
+            self.toolbar,
+            text="Run",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_botao,
+            hover_color=cor_botao_hover,
+            state="disabled",
+        )
+
+        self.botao_step = ctk.CTkButton(
+            self.toolbar,
+            text="Step",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_botao,
+            hover_color=cor_botao_hover,
+            state="disabled",
+        )
+
+        self.botao_reset = ctk.CTkButton(
+            self.toolbar,
+            text="Reset",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_reset,
+            hover_color=cor_reset_hover,
+            state="disabled",
+        )
 
         # =========================
         # Painéis
@@ -182,7 +240,7 @@ class App(ctk.CTk):
         # =========================
         # Layout da toolbar
         # =========================
-        self.botao_abrir.grid(row=0, column=0, padx=4, pady=8)
+        self.botao_abrir.grid(row=0, column=0, padx=(8, 4), pady=8)
         self.botao_salvar.grid(row=0, column=1, padx=4, pady=8)
         self.botao_montar.grid(row=0, column=2, padx=4, pady=8)
         self.botao_run.grid(row=0, column=3, padx=4, pady=8)
@@ -195,8 +253,6 @@ class App(ctk.CTk):
         self.area_principal.grid_rowconfigure(0, weight=1)
         self.area_principal.grid_columnconfigure(0, weight=1)
 
-        # Esta linha estava faltando.
-        # Sem ela, os painéis não aparecem.
         self.divisor_principal.grid(
             row=0,
             column=0,
@@ -324,6 +380,17 @@ class App(ctk.CTk):
         self.botao_run   .configure(command=self._acao_run)
         self.botao_step  .configure(command=self._acao_step)
         self.botao_reset .configure(command=self._acao_reset)
+
+    def _atualizar_estado_botoes(self):
+        programa_montado = self._instrucoes_montadas is not None
+        programa_em_execucao = programa_montado and not self.minha_cpu.finalizado
+
+        estado_execucao = "normal" if programa_em_execucao else "disabled"
+        estado_reset = "normal" if programa_montado else "disabled"
+
+        self.botao_run.configure(state=estado_execucao)
+        self.botao_step.configure(state=estado_execucao)
+        self.botao_reset.configure(state=estado_reset)
 
     def _conectar_eventos_layout(self):
         # Quando o usuário solta um divisor, salvamos a proporção atual.
@@ -469,12 +536,29 @@ class App(ctk.CTk):
         caminho = filedialog.askopenfilename(
             filetypes=[("Arquivos Sergium", "*.srg"), ("Todos", "*.*")]
         )
+
         if not caminho:
             return
 
         self._caminho_arquivo = caminho
+
         with open(caminho, "r", encoding="utf-8") as f:
             self.painel_editor.set_texto(f.read())
+
+        # Ao abrir um novo arquivo, o programa anterior deixa de ser válido.
+        self._instrucoes_montadas = None
+        self.minha_cpu.resetar()
+
+        # Reseta os painéis visuais ligados à execução anterior.
+        self.painel_instrucoes.resetar()
+        self.painel_registradores.resetar()
+        self.painel_memoria.resetar()
+        self.painel_editor.resetar_destaque()
+        self.painel_terminal.limpar()
+
+        # Atualiza os botões: Run, Step e Reset voltam a ficar desativados.
+        self._atualizar_estado_botoes()
+
         self.painel_terminal.log(f"Arquivo aberto: {caminho}")
 
     def _acao_salvar(self):
@@ -517,10 +601,11 @@ class App(ctk.CTk):
             self.painel_terminal.limpar()
             self.painel_terminal.log(f"Montado com sucesso: {len(instrucoes)} instrução(ões).")
             self._atualizar_ui()
-
+            self._atualizar_estado_botoes()
         except Exception as e:
+            self._instrucoes_montadas = None
             self.painel_terminal.erro(str(e))
-
+            self._atualizar_estado_botoes()
         finally:
             os.unlink(caminho_tmp)
 
@@ -537,6 +622,7 @@ class App(ctk.CTk):
             self.painel_terminal.erro(str(e))
         finally:
             self._atualizar_ui()
+            self._atualizar_estado_botoes()
 
     def _acao_step(self):
         if self._instrucoes_montadas is None:
@@ -548,6 +634,7 @@ class App(ctk.CTk):
             self.painel_terminal.erro(str(e))
         finally:
             self._atualizar_ui()
+            self._atualizar_estado_botoes()
 
     def _acao_entrada(self, valor: str):
         """Chamado pelo terminal quando o usuário envia um valor de entrada."""
@@ -566,3 +653,4 @@ class App(ctk.CTk):
         self.painel_terminal.limpar()
         self.painel_terminal.resetar_saida()
         self.painel_terminal.log("CPU resetada.")
+        self._atualizar_estado_botoes()
