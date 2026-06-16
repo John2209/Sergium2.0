@@ -306,6 +306,30 @@ def teste_parser_aceita_linha_sem_rotulo():
         caminho.unlink(missing_ok=True)
 
 
+def teste_parser_mapeia_linhas_originais():
+    caminho = criar_arquivo_teste(
+        "test_parser_linhas_originais.txt",
+        """
+        # comentario
+
+        inicio | COP VAL => AC | 10
+
+        SAI AC => PORTA | 2
+        """,
+    )
+
+    try:
+        parser = Parser(str(caminho))
+        parser.parsear()
+
+        assert parser.linhas_origem == {
+            "INICIO": 4,
+            "1": 6,
+        }
+    finally:
+        caminho.unlink(missing_ok=True)
+
+
 def teste_parser_rejeita_instrucao_desconhecida():
     caminho = criar_arquivo_teste(
         "test_instrucao_invalida.txt",
@@ -441,6 +465,7 @@ TESTES = [
     ("teste_entrada_saida", teste_entrada_saida),
     ("teste_parser_com_cpu", teste_parser_com_cpu),
     ("teste_parser_aceita_linha_sem_rotulo", teste_parser_aceita_linha_sem_rotulo),
+    ("teste_parser_mapeia_linhas_originais", teste_parser_mapeia_linhas_originais),
     ("teste_duas_entradas_step_by_step", teste_duas_entradas_step_by_step),
     ("teste_snapshot_basico", teste_snapshot_basico),
     ("teste_normalizar_mnemonico", teste_normalizar_mnemonico),

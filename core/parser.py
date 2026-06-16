@@ -8,9 +8,11 @@ class Parser:
 
         self.caminho_arquivo = caminho_arquivo      # armazena o caminho do arquivo
         self.instrucoes = {}                        # dicionário para armazenar as instruções
+        self.linhas_origem = {}                     # mapa de rótulo para linha original do arquivo
 
     def parsear(self):          ## função para realizar o parsing do arquivo
         self.instrucoes = {}    # limpa instruções anteriores caso o mesmo Parser seja reutilizado
+        self.linhas_origem = {}
 
         with open(self.caminho_arquivo, 'r') as arquivo:    # abre o arquivo no modo leitura
             conteudo = arquivo.read()                       # transforma o conteúdo do arquivo em uma string
@@ -47,5 +49,6 @@ class Parser:
                     raise ParserError(f"Linha {numero_linha}: rótulo duplicado: {rotulo}")
 
                 self.instrucoes[rotulo] = (mnemonico, operando)  # guarda a instrução no formato usado pela CPU
+                self.linhas_origem[rotulo] = numero_linha
 
         return self.instrucoes

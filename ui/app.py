@@ -17,6 +17,7 @@ class App(ctk.CTk):
 
         self.minha_cpu = minha_cpu              # cpu usada pela interface
         self._instrucoes_montadas = None        # programa montado no momento
+        self._linhas_editor = {}                # mapa de rótulos para linhas originais do editor
         self._caminho_arquivo = None            # caminho do arquivo aberto ou salvo
 
         # estado dos divisores redimensionáveis da interface
@@ -544,7 +545,7 @@ class App(ctk.CTk):
         if snap.finalizado:
             self.painel_editor.destacar_linha(None)
         elif snap.rotulo_atual is not None:
-            self.painel_editor.destacar_linha(snap.pc + 1)
+            self.painel_editor.destacar_linha(self._linhas_editor.get(snap.rotulo_atual))
 
         saida = self.minha_cpu.consumir_saida()
         if saida is not None:
@@ -571,6 +572,7 @@ class App(ctk.CTk):
 
         # ao abrir um novo arquivo, reseta a cpu
         self._instrucoes_montadas = None
+        self._linhas_editor = {}
         self.minha_cpu.resetar()
 
         # reseta os painéis visuais
@@ -620,6 +622,7 @@ class App(ctk.CTk):
             instrucoes = parser.parsear()
             self.minha_cpu.carregar_programa(instrucoes)
             self._instrucoes_montadas = instrucoes
+            self._linhas_editor = parser.linhas_origem.copy()
 
             self.painel_instrucoes.carregar(instrucoes)
             self.painel_registradores.resetar()
@@ -631,6 +634,7 @@ class App(ctk.CTk):
 
         except Exception as e:
             self._instrucoes_montadas = None
+            self._linhas_editor = {}
             self.painel_terminal.erro(str(e))
             self._atualizar_estado_botoes()
 
@@ -678,6 +682,7 @@ class App(ctk.CTk):
     def _acao_reset(self):
         self.minha_cpu.resetar()
         self._instrucoes_montadas = None
+        self._linhas_editor = {}
         self.painel_instrucoes.resetar()
         self.painel_registradores.resetar()
         self.painel_memoria.resetar()
