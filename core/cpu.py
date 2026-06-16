@@ -72,6 +72,12 @@ class CPU:
         self.entrada = self._converter_operando_para_int(valor)
         self.flag_entrada = True
 
+    def consumir_saida(self):
+        # entrega a saída atual para a interface e limpa para não imprimir de novo
+        saida = self.saida
+        self.saida = None
+        return saida
+
     def snapshot(self):
         # cria um snapshot do estado atual da CPU para a interface
         chaves = list(self.instrucoes.keys())

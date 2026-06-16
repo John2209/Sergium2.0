@@ -120,8 +120,9 @@ class App(ctk.CTk):
         self.painel_instrucoes.atualizar(snap)
         self.painel_memoria.atualizar(snap)
 
-        if snap.saida is not None:
-            self.painel_terminal.mostrar_saida(snap.saida)
+        saida = self.minha_cpu.consumir_saida()
+        if saida is not None:
+            self.painel_terminal.mostrar_saida(saida)
 
         if snap.finalizado:
             self.painel_terminal.log("Programa finalizado.")
