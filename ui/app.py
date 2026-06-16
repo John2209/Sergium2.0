@@ -108,14 +108,33 @@ class App(ctk.CTk):
         # =========================
         # Coluna direita: instruções + registradores + memória
         # =========================
-        self.painel_lateral.grid_rowconfigure(0, weight=2)
-        self.painel_lateral.grid_rowconfigure(1, weight=1)
-        self.painel_lateral.grid_rowconfigure(2, weight=3)
+
+        # Instruções e memória crescem quando há espaço.
+        # Registradores ficam mais estáveis, porque agora são compactos.
+        self.painel_lateral.grid_rowconfigure(0, weight=3, minsize=150)
+        self.painel_lateral.grid_rowconfigure(1, weight=0, minsize=145)
+        self.painel_lateral.grid_rowconfigure(2, weight=3, minsize=150)
         self.painel_lateral.grid_columnconfigure(0, weight=1)
 
-        self.painel_instrucoes.grid(row=0, column=0, sticky="nsew", pady=(0, 8))
-        self.painel_registradores.grid(row=1, column=0, sticky="nsew", pady=(0, 8))
-        self.painel_memoria.grid(row=2, column=0, sticky="nsew")
+        self.painel_instrucoes.grid(
+            row=0,
+            column=0,
+            sticky="nsew",
+            pady=(0, 8),
+        )
+
+        self.painel_registradores.grid(
+            row=1,
+            column=0,
+            sticky="ew",
+            pady=(0, 8),
+        )
+
+        self.painel_memoria.grid(
+            row=2,
+            column=0,
+            sticky="nsew",
+        )
 
     def conectar_botoes(self):
         self.botao_abrir .configure(command=self._acao_abrir)
