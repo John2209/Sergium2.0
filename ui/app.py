@@ -2,6 +2,7 @@
 # Inicialização da aplicação
 
 import customtkinter as ctk
+import tkinter as tk
 from tkinter import filedialog
 import tempfile
 import os
@@ -44,6 +45,17 @@ class App(ctk.CTk):
 
         # Coluna esquerda: editor em cima, terminal embaixo
         self.area_esquerda = ctk.CTkFrame(self.area_principal, corner_radius=0, fg_color="transparent")
+
+        # Divisor redimensionável entre editor e terminal
+        self.divisor_esquerdo = tk.PanedWindow(
+            self.area_esquerda,
+            orient=tk.VERTICAL,
+            sashwidth=6,
+            sashrelief="flat",
+            bd=0,
+            bg="#111111",
+            showhandle=False,
+        )
 
         # Coluna direita: instruções, registradores e memória
         self.painel_lateral = ctk.CTkFrame(self.area_principal, corner_radius=0, fg_color="transparent")
@@ -96,14 +108,30 @@ class App(ctk.CTk):
         self.painel_lateral.grid(row=0, column=1, sticky="nsew")
 
         # =========================
-        # Coluna esquerda: editor + terminal
+        # Coluna esquerda: editor + terminal redimensionáveis
         # =========================
-        self.area_esquerda.grid_rowconfigure(0, weight=4)
-        self.area_esquerda.grid_rowconfigure(1, weight=1, minsize=130)
+        self.area_esquerda.grid_rowconfigure(0, weight=1)
         self.area_esquerda.grid_columnconfigure(0, weight=1)
 
-        self.painel_editor.grid(row=0, column=0, sticky="nsew", pady=(0, 8))
-        self.painel_terminal.grid(row=1, column=0, sticky="nsew")
+        self.divisor_esquerdo.grid(row=0, column=0, sticky="nsew")
+
+        self.divisor_esquerdo.add(
+            self.painel_editor,
+            minsize=320,
+            padx=0,
+            pady=0,
+            sticky="nsew",
+        )
+
+        self.divisor_esquerdo.add(
+            self.painel_terminal,
+            minsize=120,
+            padx=0,
+            pady=0,
+            sticky="nsew",
+        )
+
+        self.after(100, self._ajustar_divisor_esquerdo)
 
         # =========================
         # Coluna direita: instruções + registradores + memória
@@ -135,6 +163,17 @@ class App(ctk.CTk):
             column=0,
             sticky="nsew",
         )
+
+    def _ajustar_divisor_esquerdo(self):
+        # Define uma posição inicial boa para a divisória entre editor e terminal.
+        # Depois disso, o usuário pode arrastar livremente.
+        altura = self.area_esquerda.winfo_height()
+
+        if altura <= 0:
+            return
+
+        posicao = int(altura * 0.75)
+        self.divisor_esquerdo.sash_place(0, 0, posicao)
 
     def conectar_botoes(self):
         self.botao_abrir .configure(command=self._acao_abrir)
