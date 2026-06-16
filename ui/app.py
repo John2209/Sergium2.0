@@ -29,8 +29,8 @@ class App(ctk.CTk):
         ctk.set_default_color_theme("blue")
 
         self.title("Sergium 2.0")
-        self.geometry("1356x864")
-        self.minsize(900, 500)
+        self.geometry("1180x700")
+        self.minsize(1000, 620)
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
