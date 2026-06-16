@@ -40,7 +40,7 @@ class EditorPanel(ctk.CTkFrame):
         # área de edição principal
         self.editor = tk.Text(
             self.container,
-            font=("Courier New", 13),
+            font=("Courier New", 12),
             bg="#1e1e1e",
             fg="#e0e0e0",
             insertbackground="#e0e0e0",
@@ -50,8 +50,9 @@ class EditorPanel(ctk.CTkFrame):
             undo=True,
             wrap="none",
             padx=8,
-            pady=4,
+            pady=3,
         )
+
         self.editor.tag_configure("linha_atual", background=self.COR_LINHA_ATUAL)
 
         self.scrollbar_v = ctk.CTkScrollbar(self.container, command=self._scroll_y_ambos)
@@ -67,8 +68,8 @@ class EditorPanel(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        self.titulo.grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
-        self.container.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self.titulo.grid(row=0, column=0, sticky="w", padx=16, pady=(8, 4))
+        self.container.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 10))
 
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(1, weight=1)
