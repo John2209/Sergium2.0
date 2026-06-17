@@ -1,0 +1,10 @@
+ | COP VAL => AC | 10
+ | COP AC => AUX | 0
+ | COP VAL => AC | 25
+ | COP AC => AUX | 1
+ | COP AUX => AC | 0
+ | COP AC => AUX | 2
+ | COP AUX => AC | 1
+ | COP AC => AUX | 3
+ | COP AUX => AC | 2
+ | PARA | 0

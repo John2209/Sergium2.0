@@ -1,0 +1,32 @@
+# Ambientes Virtuais
+venv/
+env/
+.venv/
+
+# Python (Compilados e Cache)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Distribuição e Build
+dist/
+build/
+*.egg-info/
+*.spec
+
+# Configurações de IDE
+.vscode/
+.idea/
+
+# Arquivos de Sistema e Segurança
+.env
+*.Identifier
+.DS_Store
+Thumbs.db
+
+# Pasta de PDFs e códigos
+PDFs/
+#codigos/
