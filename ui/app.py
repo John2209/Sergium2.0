@@ -559,30 +559,35 @@ class App(ctk.CTk):
     # =============================================
     def _acao_abrir(self):
         caminho = filedialog.askopenfilename(
-            filetypes=[("Arquivos Sergium", "*.srg"), ("Todos", "*.*")]
+            filetypes=[("Arquivos Sergium", "*.srg *.txt"), ("Todos", "*.*")]
         )
 
         if not caminho:
             return
 
-        self._caminho_arquivo = caminho
-
-        with open(caminho, "r", encoding="utf-8") as f:
-            self.painel_editor.set_texto(f.read())
+        try:
+            with open(caminho, "r", encoding="utf-8") as f:
+                conteudo = f.read()
+        except (OSError, UnicodeError) as erro:
+            self.painel_terminal.erro(
+                f"Não foi possível abrir o arquivo: {erro}"
+            )
+            return
 
         # ao abrir um novo arquivo, reseta a cpu
+        self.painel_editor.set_texto(conteudo)
+        self._caminho_arquivo = caminho
+
         self._instrucoes_montadas = None
         self._linhas_editor = {}
         self.minha_cpu.resetar()
 
-        # reseta os painéis visuais
         self.painel_instrucoes.resetar()
         self.painel_registradores.resetar()
         self.painel_memoria.resetar()
         self.painel_editor.resetar_destaque()
         self.painel_terminal.limpar()
 
-        # atualiza os botões
         self._atualizar_estado_botoes()
 
         self.painel_terminal.log(f"Arquivo aberto: {caminho}")
