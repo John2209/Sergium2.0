@@ -1,6 +1,0 @@
- | ENT PORTA => AC | 0
- | COP AC => MEM | 100
- | COP VAL => AC | 0
- | COP MEM => AC | 100
- | SAI AC => PORTA | 2
- | PARA | 0
