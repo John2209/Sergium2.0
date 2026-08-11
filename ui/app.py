@@ -19,6 +19,9 @@ class App(ctk.CTk):
         self._instrucoes_montadas = None        # programa montado no momento
         self._linhas_editor = {}                # mapa de rótulos para linhas originais do editor
         self._caminho_arquivo = None            # caminho do arquivo aberto ou salvo
+        self._erro_execucao = False             # bloqueia nova execução depois de uma falha
+        self._modo_entrada_pendente = None       # guarda se a entrada foi pedida por Run ou Step
+        self._finalizacao_informada = False      # evita repetir a mensagem de finalização
 
         # estado dos divisores redimensionáveis da interface
         self._estado_layout_atual = "janela"
@@ -31,6 +34,7 @@ class App(ctk.CTk):
         self.conectar_botoes()
         self._atualizar_estado_botoes()
         self._conectar_eventos_layout()
+        self.painel_editor.definir_callback_modificacao(self._ao_modificar_editor)
         self.painel_terminal.definir_callback_entrada(self._acao_entrada)
 
 
@@ -405,7 +409,12 @@ class App(ctk.CTk):
 
     def _atualizar_estado_botoes(self):
         programa_montado = self._instrucoes_montadas is not None
-        programa_em_execucao = programa_montado and not self.minha_cpu.finalizado
+        programa_em_execucao = (
+            programa_montado
+            and not self.minha_cpu.finalizado
+            and not self._erro_execucao
+            and self._modo_entrada_pendente is None
+        )
 
         estado_execucao = "normal" if programa_em_execucao else "disabled"
         estado_reset = "normal" if programa_montado else "disabled"
@@ -413,6 +422,49 @@ class App(ctk.CTk):
         self.botao_run.configure(state=estado_execucao)
         self.botao_step.configure(state=estado_execucao)
         self.botao_reset.configure(state=estado_reset)
+
+
+    def _limpar_programa_montado(self, limpar_terminal=False):
+        """descarta programa e estado visual sem alterar o texto do editor"""
+        self._instrucoes_montadas = None
+        self._linhas_editor = {}
+        self._erro_execucao = False
+        self._modo_entrada_pendente = None
+        self._finalizacao_informada = False
+
+        self.minha_cpu.resetar()
+        self.painel_instrucoes.resetar()
+        self.painel_registradores.resetar()
+        self.painel_memoria.resetar()
+        self.painel_editor.resetar_destaque()
+
+        if limpar_terminal:
+            self.painel_terminal.limpar()
+        else:
+            self.painel_terminal.resetar_saida()
+
+        self._atualizar_estado_botoes()
+
+
+    def _ao_modificar_editor(self):
+        """invalida a montagem assim que o código montado for alterado"""
+        if self._instrucoes_montadas is None:
+            return
+
+        self._limpar_programa_montado()
+        self.painel_terminal.log("Código alterado. Monte o programa novamente.")
+
+
+    def _registrar_erro_execucao(self, erro):
+        """registra uma falha e impede que a instrução defeituosa seja repetida"""
+        self._erro_execucao = True
+        self._modo_entrada_pendente = None
+        self.painel_terminal.erro(str(erro))
+
+
+    def _pausar_para_entrada(self, modo):
+        self._modo_entrada_pendente = modo
+        self.painel_terminal.log("Programa pausado. Aguardando valor de entrada.")
 
 
     def _conectar_eventos_layout(self):
@@ -547,12 +599,12 @@ class App(ctk.CTk):
         elif snap.rotulo_atual is not None:
             self.painel_editor.destacar_linha(self._linhas_editor.get(snap.rotulo_atual))
 
-        saida = self.minha_cpu.consumir_saida()
-        if saida is not None:
+        for saida in self.minha_cpu.consumir_saidas():
             self.painel_terminal.mostrar_saida(saida)
 
-        if snap.finalizado:
+        if snap.finalizado and not self._finalizacao_informada:
             self.painel_terminal.log("Programa finalizado.")
+            self._finalizacao_informada = True
 
     # =============================================
     # ações dos botões
@@ -574,22 +626,10 @@ class App(ctk.CTk):
             )
             return
 
-        # ao abrir um novo arquivo, reseta a cpu
+        # ao abrir um novo arquivo, descarta qualquer montagem anterior
         self.painel_editor.set_texto(conteudo)
         self._caminho_arquivo = caminho
-
-        self._instrucoes_montadas = None
-        self._linhas_editor = {}
-        self.minha_cpu.resetar()
-
-        self.painel_instrucoes.resetar()
-        self.painel_registradores.resetar()
-        self.painel_memoria.resetar()
-        self.painel_editor.resetar_destaque()
-        self.painel_terminal.limpar()
-
-        self._atualizar_estado_botoes()
-
+        self._limpar_programa_montado(limpar_terminal=True)
         self.painel_terminal.log(f"Arquivo aberto: {caminho}")
 
 
@@ -601,33 +641,60 @@ class App(ctk.CTk):
         if not caminho:
             return
 
+        caminho_tmp = None
+
+        try:
+            diretor = os.path.dirname(os.path.abspath(caminho))
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                dir=diretor,
+                prefix=".sergium_",
+                suffix=".tmp",
+                delete=False,
+                encoding="utf-8",
+            ) as tmp:
+                caminho_tmp = tmp.name
+                tmp.write(self.painel_editor.get_texto())
+
+            os.replace(caminho_tmp, caminho)
+            caminho_tmp = None
+        except (OSError, UnicodeError) as erro:
+            self.painel_terminal.erro(
+                f"Não foi possível salvar o arquivo: {erro}"
+            )
+            return
+        finally:
+            if caminho_tmp is not None:
+                try:
+                    os.unlink(caminho_tmp)
+                except OSError:
+                    pass
+
         self._caminho_arquivo = caminho
-        with open(caminho, "w", encoding="utf-8") as f:
-            f.write(self.painel_editor.get_texto())
         self.painel_terminal.log(f"Arquivo salvo: {caminho}")
 
 
     def _acao_montar(self):
-        from core import Parser, ParserError
+        from core import Parser
 
-        texto = self.painel_editor.get_texto()
-        if not texto.strip():
-            self.painel_terminal.erro("Editor vazio. Escreva um programa antes de montar.")
-            return
-
-        # parser lê arquivos, salva em temporário
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".srg", delete=False, encoding="utf-8"
-        ) as tmp:
-            tmp.write(texto)
-            caminho_tmp = tmp.name
+        caminho_tmp = None
 
         try:
+            # parser lê arquivos, salva o texto do editor em temporário
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".srg", delete=False, encoding="utf-8"
+            ) as tmp:
+                caminho_tmp = tmp.name
+                tmp.write(self.painel_editor.get_texto())
+
             parser = Parser(caminho_tmp)
             instrucoes = parser.parsear()
             self.minha_cpu.carregar_programa(instrucoes)
             self._instrucoes_montadas = instrucoes
             self._linhas_editor = parser.linhas_origem.copy()
+            self._erro_execucao = False
+            self._modo_entrada_pendente = None
+            self._finalizacao_informada = False
 
             self.painel_instrucoes.carregar(instrucoes)
             self.painel_registradores.resetar()
@@ -638,26 +705,36 @@ class App(ctk.CTk):
             self._atualizar_estado_botoes()
 
         except Exception as e:
-            self._instrucoes_montadas = None
-            self._linhas_editor = {}
+            self._limpar_programa_montado()
             self.painel_terminal.erro(str(e))
-            self._atualizar_estado_botoes()
 
         finally:
-            os.unlink(caminho_tmp)
+            if caminho_tmp is not None:
+                try:
+                    os.unlink(caminho_tmp)
+                except OSError:
+                    pass
 
     def _acao_run(self):
         if self._instrucoes_montadas is None:
             self.painel_terminal.erro("Monte o programa antes de executar.")
             return
 
+        if self._erro_execucao:
+            self.painel_terminal.erro("Remonte ou resete o programa antes de executar novamente.")
+            return
+
+        if self._modo_entrada_pendente is not None:
+            self.painel_terminal.erro("Forneça o valor de entrada antes de continuar.")
+            return
+
         try:
             terminou = self.minha_cpu.executar_tudo()
             if terminou is False:
-                self.painel_terminal.log("Programa pausado. Aguardando valor de entrada.")
+                self._pausar_para_entrada("run")
 
         except Exception as e:
-            self.painel_terminal.erro(str(e))
+            self._registrar_erro_execucao(e)
 
         finally:
             self._atualizar_ui()
@@ -668,10 +745,24 @@ class App(ctk.CTk):
         if self._instrucoes_montadas is None:
             self.painel_terminal.erro("Monte o programa antes de executar.")
             return
+
+        if self._erro_execucao:
+            self.painel_terminal.erro("Remonte ou resete o programa antes de executar novamente.")
+            return
+
+        if self._modo_entrada_pendente is not None:
+            self.painel_terminal.erro("Forneça o valor de entrada antes de continuar.")
+            return
+
         try:
             self.minha_cpu.executar_instrucao()
         except Exception as e:
-            self.painel_terminal.erro(str(e))
+            from core import EntradaNecessariaError
+
+            if isinstance(e, EntradaNecessariaError):
+                self._pausar_para_entrada("step")
+            else:
+                self._registrar_erro_execucao(e)
         finally:
             self._atualizar_ui()
             self._atualizar_estado_botoes()
@@ -683,16 +774,28 @@ class App(ctk.CTk):
             self.minha_cpu.definir_entrada(valor)
         except Exception as e:
             self.painel_terminal.erro(str(e))
+            return False
+
+        modo_pendente = self._modo_entrada_pendente
+        self._modo_entrada_pendente = None
+
+        if modo_pendente in ("run", "step"):
+            # permite ao terminal registrar e limpar a entrada antes da retomada
+            self.after_idle(self._retomar_apos_entrada, modo_pendente)
+        else:
+            self._atualizar_ui()
+            self._atualizar_estado_botoes()
+
+        return True
+
+
+    def _retomar_apos_entrada(self, modo: str):
+        """continua a execução depois que o terminal processa a entrada"""
+        if modo == "run":
+            self._acao_run()
+        elif modo == "step":
+            self._acao_step()
 
     def _acao_reset(self):
-        self.minha_cpu.resetar()
-        self._instrucoes_montadas = None
-        self._linhas_editor = {}
-        self.painel_instrucoes.resetar()
-        self.painel_registradores.resetar()
-        self.painel_memoria.resetar()
-        self.painel_editor.resetar_destaque()
-        self.painel_terminal.limpar()
-        self.painel_terminal.resetar_saida()
+        self._limpar_programa_montado(limpar_terminal=True)
         self.painel_terminal.log("CPU resetada.")
-        self._atualizar_estado_botoes()
