@@ -51,6 +51,7 @@ class CPU:
         self.entrada = None             # valor de entrada aguardando leitura; None significa que não há entrada disponível
         self.flag_entrada = False       # indica se há um valor pronto para a próxima instrução ENT
         self.saida = None               # valor de saida do Sergium
+        self._saidas_pendentes = []     # saídas ainda não entregues à interface, na ordem em que foram geradas
         self.ac = 0                     # acumulador
         self.z = 0                      # 1 se o último resultado aritmético foi zero
         self.p = 0                      # 1 se o último resultado aritmético foi positivo
@@ -75,10 +76,19 @@ class CPU:
 
 
     def consumir_saida(self):
-        # entrega a saída atual para a interface e limpa para não imprimir de novo
+        # mantém a API antiga: entrega a saída mais recente e limpa todas as pendências
         saida = self.saida
+        self._saidas_pendentes.clear()
         self.saida = None
         return saida
+
+
+    def consumir_saidas(self):
+        # entrega todas as saídas na ordem em que foram geradas e limpa para não imprimir de novo
+        saidas = self._saidas_pendentes.copy()
+        self._saidas_pendentes.clear()
+        self.saida = None
+        return saidas
 
 
     def snapshot(self):
@@ -195,6 +205,11 @@ class CPU:
             return False        # programa ainda não terminou, mas a CPU não deve incrementar o PC
 
         self.pc += 1    # se for uma instrução comum (valor None), vai para a próxima
+
+        if self.pc >= len(chaves):
+            self.finalizado = True
+            return True                 # a instrução executada era a última do programa
+
         return False    # programa ainda não acabou
 
 
@@ -306,6 +321,7 @@ class CPU:
     def _exec_sai_ac_porta(self, operando):
         self._validar_porta_saida(operando)
         self.saida = self.ac
+        self._saidas_pendentes.append(self.ac)
 
     def _exec_para(self, operando):
         return True
