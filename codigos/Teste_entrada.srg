@@ -1,0 +1,5 @@
+ | ENT PORTA => AC | 0
+ | COP AC => AUX | 0
+ | SOM AC + VAL => AC | 10
+ | SAI AC => PORTA | 2
+ | PARA | 0

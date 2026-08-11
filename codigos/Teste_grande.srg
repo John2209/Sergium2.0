@@ -1,0 +1,28 @@
+ | COP VAL => AC | 8
+ | COP AC => AUX | 0
+ | COP VAL => AC | 3
+ | COP AC => AUX | 1
+ | COP AUX => AC | 0
+ | SOM AC + AUX => AC | 1
+ | COP AC => MEM | 100
+ | SUB AC - VAL => AC | 11
+ | VAI SE Z = 1 | deu_zero
+ | COP VAL => AC | 999
+ | VAI | fim
+
+deu_zero | COP MEM => AC | 100
+ | SUB AC - AUX => AC | 1
+ | VAI SE P = 1 | positivo
+ | COP VAL => AC | 777
+ | VAI | fim
+
+positivo | COP VAL => AC | 50
+ | SOM AC + VAL => AC | 10
+ | COP AC => AUX | 2
+ | SUB AC - VAL => AC | 60
+ | VAI SE Z = 1 | final_zero
+ | COP VAL => AC | 555
+ | VAI | fim
+
+final_zero | COP AUX => AC | 2
+fim | PARA | 0
