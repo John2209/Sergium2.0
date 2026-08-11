@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -21,6 +22,10 @@ from core.errors import (
 # FUNÇÕES AUXILIARES
 # =========================
 
+PASTA_TEMPORARIA = TemporaryDirectory(prefix="msergium_testes_")
+PASTA_TESTES = Path(PASTA_TEMPORARIA.name)
+
+
 def assert_lanca(erro_esperado, funcao, *args, **kwargs):
     try:
         funcao(*args, **kwargs)
@@ -30,12 +35,9 @@ def assert_lanca(erro_esperado, funcao, *args, **kwargs):
     assert False, f"Era esperado {erro_esperado.__name__}"
 
 
-def criar_arquivo_teste(nome_arquivo, conteudo):
-    pasta = Path("codigos")
-    pasta.mkdir(exist_ok=True)
-
-    caminho = pasta / nome_arquivo
-    caminho.write_text(conteudo, encoding="utf-8")
+def criar_arquivo_teste(nome_arquivo, conteudo, encoding="utf-8"):
+    caminho = PASTA_TESTES / nome_arquivo
+    caminho.write_text(conteudo, encoding=encoding)
 
     return caminho
 
@@ -173,6 +175,78 @@ def teste_executar_tudo():
     assert cpu.finalizado is True
     assert cpu.ac == 15
     assert cpu.saida == 15
+
+
+def teste_termino_natural_na_ultima_instrucao():
+    cpu = CPU()
+
+    programa = {
+        "0": ("COP VAL => AC", "10"),
+    }
+
+    cpu.carregar_programa(programa)
+
+    terminou = cpu.executar_instrucao()
+
+    assert terminou is True
+    assert cpu.finalizado is True
+    assert cpu.pc == 1
+
+
+def teste_limite_exato_nao_e_loop_infinito():
+    cpu = CPU()
+    programa = {
+        str(indice): ("COP VAL => AC", str(indice))
+        for indice in range(1000)
+    }
+
+    cpu.carregar_programa(programa)
+
+    terminou = cpu.executar_tudo(limite_instrucoes=1000)
+
+    assert terminou is True
+    assert cpu.finalizado is True
+    assert cpu.pc == 1000
+    assert cpu.ac == 999
+
+
+def teste_preserva_todas_as_saidas():
+    cpu = CPU()
+
+    programa = {
+        "0": ("COP VAL => AC", "1"),
+        "1": ("SAI AC => PORTA", "2"),
+        "2": ("COP VAL => AC", "2"),
+        "3": ("SAI AC => PORTA", "2"),
+        "4": ("PARA", "0"),
+    }
+
+    cpu.carregar_programa(programa)
+    cpu.executar_tudo()
+
+    assert cpu.saida == 2
+    assert cpu.consumir_saidas() == [1, 2]
+    assert cpu.saida is None
+    assert cpu.consumir_saidas() == []
+
+
+def teste_consumir_saida_mantem_compatibilidade():
+    cpu = CPU()
+
+    programa = {
+        "0": ("COP VAL => AC", "1"),
+        "1": ("SAI AC => PORTA", "2"),
+        "2": ("COP VAL => AC", "2"),
+        "3": ("SAI AC => PORTA", "2"),
+        "4": ("PARA", "0"),
+    }
+
+    cpu.carregar_programa(programa)
+    cpu.executar_tudo()
+
+    assert cpu.consumir_saida() == 2
+    assert cpu.saida is None
+    assert cpu.consumir_saidas() == []
 
 
 def teste_loop_infinito():
@@ -330,6 +404,77 @@ def teste_parser_mapeia_linhas_originais():
         caminho.unlink(missing_ok=True)
 
 
+def teste_parser_le_utf8_com_bom():
+    caminho = criar_arquivo_teste(
+        "test_parser_utf8_bom.txt",
+        """início | COP VAL => AC | 7
+        # comentário com acentuação
+        fim | PARA | 0
+        """,
+        encoding="utf-8-sig",
+    )
+
+    parser = Parser(str(caminho))
+    programa = parser.parsear()
+
+    assert programa == {
+        "INÍCIO": ("COP VAL => AC", "7"),
+        "FIM": ("PARA", "0"),
+    }
+
+
+def teste_parser_ignora_comentario_com_separador():
+    caminho = criar_arquivo_teste(
+        "test_parser_comentario_separador.txt",
+        """
+        # formato: rótulo | mnemônico | operando
+        # | isto também é apenas um comentário | mesmo com separadores
+
+        | COP VAL => AC | 10
+        | PARA | 0
+        """,
+    )
+
+    parser = Parser(str(caminho))
+    programa = parser.parsear()
+
+    assert programa == {
+        "0": ("COP VAL => AC", "10"),
+        "1": ("PARA", "0"),
+    }
+
+
+def teste_parser_rejeita_linha_sem_separador():
+    caminho = criar_arquivo_teste(
+        "test_parser_sem_separador.txt",
+        """
+        | COP VAL => AC | 10
+        esta linha não é uma instrução válida
+        | PARA | 0
+        """,
+    )
+
+    parser = Parser(str(caminho))
+
+    assert_lanca(ParserError, parser.parsear)
+
+
+def teste_parser_rejeita_programa_sem_instrucoes():
+    caminho = criar_arquivo_teste(
+        "test_parser_sem_instrucoes.txt",
+        """
+
+        # arquivo apenas com comentários
+        # formato: rótulo | mnemônico | operando
+
+        """,
+    )
+
+    parser = Parser(str(caminho))
+
+    assert_lanca(ParserError, parser.parsear)
+
+
 def teste_parser_rejeita_instrucao_desconhecida():
     caminho = criar_arquivo_teste(
         "test_instrucao_invalida.txt",
@@ -429,15 +574,13 @@ def teste_porta_saida_invalida():
 
 
 def teste_parser_rotulo_duplicado():
-    caminho = Path("codigos/test_rotulo_duplicado.txt")
-
-    caminho.write_text(
+    caminho = criar_arquivo_teste(
+        "test_rotulo_duplicado.txt",
         """
         inicio | COP VAL => AC | 10
         inicio | SAI AC => PORTA | 2
         | PARA | 0
         """,
-        encoding="utf-8"
     )
 
     parser = Parser(str(caminho))
@@ -475,10 +618,20 @@ TESTES = [
     ("teste_operando_nao_numerico", teste_operando_nao_numerico),
     ("teste_porta_saida_invalida", teste_porta_saida_invalida),
     ("teste_executar_tudo", teste_executar_tudo),
+    ("teste_termino_natural_na_ultima_instrucao", teste_termino_natural_na_ultima_instrucao),
+    ("teste_limite_exato_nao_e_loop_infinito", teste_limite_exato_nao_e_loop_infinito),
+    ("teste_preserva_todas_as_saidas", teste_preserva_todas_as_saidas),
+    ("teste_consumir_saida_mantem_compatibilidade", teste_consumir_saida_mantem_compatibilidade),
     ("teste_loop_infinito", teste_loop_infinito),
     ("teste_entrada_necessaria", teste_entrada_necessaria),
     ("teste_definir_entrada", teste_definir_entrada),
     ("teste_parser_rotulo_duplicado", teste_parser_rotulo_duplicado),
+    ("teste_parser_le_utf8_com_bom", teste_parser_le_utf8_com_bom),
+    ("teste_parser_ignora_comentario_com_separador", teste_parser_ignora_comentario_com_separador),
+    ("teste_parser_rejeita_linha_sem_separador", teste_parser_rejeita_linha_sem_separador),
+    ("teste_parser_rejeita_programa_sem_instrucoes", teste_parser_rejeita_programa_sem_instrucoes),
+    ("teste_parser_rejeita_instrucao_desconhecida", teste_parser_rejeita_instrucao_desconhecida),
+    ("teste_parser_rejeita_linha_com_formato_invalido", teste_parser_rejeita_linha_com_formato_invalido),
     ("teste_imports_publicos_do_core", teste_imports_publicos_do_core),
 ]
 
