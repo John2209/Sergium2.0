@@ -16,8 +16,7 @@ class RegistersPanel(ctk.CTkFrame):
     def __init__(self, master, **kwargs):  # inicializa o painel de registradores
         super().__init__(master, **kwargs)
 
-        self._valores_anteriores = {}  # guarda valores anteriores para destacar mudanças
-        self._labels = {}              # guarda labels e cards por chave de registrador
+        self._labels = {}  # guarda labels e cards por chave de registrador
 
         self._campos = [  # lista dos campos exibidos no painel
             ("pc",   "PC"),
@@ -29,6 +28,10 @@ class RegistersPanel(ctk.CTkFrame):
             ("aux2", "AUX2"),
             ("aux3", "AUX3"),
         ]
+
+        self._valores_anteriores = {  # guarda valores anteriores para destacar mudanças
+            chave: 0 for chave, _ in self._campos
+        }
 
         self._criar_widgets()      # cria os cards de registradores
         self._configurar_layout()  # organiza os cards em duas colunas
@@ -169,7 +172,9 @@ class RegistersPanel(ctk.CTkFrame):
         self._valores_anteriores = novos  # guarda os valores para a próxima comparação
 
     def resetar(self):
-        self._valores_anteriores = {}  # limpa o histórico de mudanças
+        self._valores_anteriores = {  # restaura o estado inicial sem mudanças destacadas
+            chave: 0 for chave, _ in self._campos
+        }
 
         for chave, _ in self._campos:
             _, lbl_valor, card = self._labels[chave]
