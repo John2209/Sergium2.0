@@ -102,6 +102,10 @@ class InstructionsPanel(ctk.CTkFrame):
         if self._item_atual and self.tree.exists(self._item_atual):
             self.tree.item(self._item_atual, tags=())
 
+        if snapshot.finalizado:
+            self._item_atual = None
+            return
+
         rotulo = snapshot.rotulo_atual  # rótulo da instrução atual no snapshot
         if rotulo and self.tree.exists(rotulo):
             self.tree.item(rotulo, tags=("atual",))
