@@ -10,6 +10,8 @@ class EditorPanel(ctk.CTkFrame):
 
     def __init__(self, master, **kwargs):  # inicializa o painel do editor
         super().__init__(master, **kwargs)
+        self._callback_modificacao = None  # função chamada quando o usuário altera o código
+        self._alterando_texto = False      # evita notificar alterações feitas por set_texto
         self._criar_widgets()       # cria os elementos visuais
         self._configurar_layout()   # posiciona os elementos na grade
         self._conectar_eventos()    # conecta eventos do editor
@@ -27,8 +29,9 @@ class EditorPanel(ctk.CTkFrame):
             self.container,
             width=4,
             padx=6,
+            pady=3,
             state="disabled",
-            font=("Courier New", 13),
+            font=("Courier New", 12),
             bg="#1a1a1a",
             fg="#555555",
             bd=0,
@@ -82,8 +85,7 @@ class EditorPanel(ctk.CTkFrame):
 
 
     def _conectar_eventos(self):
-        self.editor.bind("<KeyRelease>",    self._on_modificado)
-        self.editor.bind("<ButtonRelease>", self._on_modificado)
+        self.editor.bind("<<Modified>>",    self._on_modificado)
         self.editor.bind("<MouseWheel>",    self._on_scroll_mouse)
         self.nums.bind("<MouseWheel>",      self._on_scroll_mouse)
 
@@ -97,9 +99,20 @@ class EditorPanel(ctk.CTkFrame):
 
     def set_texto(self, texto: str):
         """substitui todo o conteúdo do editor."""
-        self.editor.delete("1.0", "end")
-        self.editor.insert("1.0", texto)
+        self._alterando_texto = True
+        try:
+            self.editor.delete("1.0", "end")
+            self.editor.insert("1.0", texto)
+            self.editor.edit_reset()          # o novo texto inicia um histórico de edição limpo
+            self.editor.edit_modified(False)  # set_texto não representa uma alteração do usuário
+        finally:
+            self._alterando_texto = False
         self._atualizar_numeracao()
+
+
+    def definir_callback_modificacao(self, fn):
+        # registra a função chamada quando o usuário altera o conteúdo do editor
+        self._callback_modificacao = fn
 
 
     def destacar_linha(self, numero: int | None):
@@ -137,7 +150,12 @@ class EditorPanel(ctk.CTkFrame):
 
 
     def _on_scroll_mouse(self, event):
-        delta = -1 * (event.delta // 120) if event.delta else (1 if event.num == 5 else -1)  # converte roda do mouse em passos
+        if event.delta:
+            passos = max(1, int(abs(event.delta) / 120))
+            delta = -passos if event.delta > 0 else passos
+        else:
+            delta = 1 if event.num == 5 else -1
+
         self.editor.yview_scroll(delta, "units")
         self.nums.yview_scroll(delta, "units")
         return "break"
@@ -146,7 +164,14 @@ class EditorPanel(ctk.CTkFrame):
     # numeração de linhas
     # =============================================
     def _on_modificado(self, event=None):
+        if not self.editor.edit_modified():
+            return
+
+        self.editor.edit_modified(False)  # rearma o evento para a próxima alteração
         self._atualizar_numeracao()
+
+        if not self._alterando_texto and self._callback_modificacao:
+            self._callback_modificacao()
 
 
     def _atualizar_numeracao(self):
