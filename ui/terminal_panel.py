@@ -182,11 +182,11 @@ class TerminalPanel(ctk.CTkFrame):
         if not valor:
             return
 
+        if self._callback_entrada and self._callback_entrada(valor) is False:
+            return
+
         self.log(f"Entrada definida: {valor}")
         self.campo_entrada.delete(0, "end")  # limpa o campo depois do envio
-
-        if self._callback_entrada:
-            self._callback_entrada(valor)  # entrega o valor para a app
 
 
     def _escrever(self, texto: str, tag: str):
