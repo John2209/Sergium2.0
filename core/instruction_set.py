@@ -18,9 +18,9 @@ INSTRUCOES_VALIDAS = {
     "SUB AC - VAL => AC",
 
     "MUL AC * AUX => AC",
-    "DIV AC / AUX => AC"
-    "MUL AC * VAL => AC"
-    "DIV AC / VAL => AC"
+    "DIV AC / AUX => AC",
+    "MUL AC * VAL => AC",
+    "DIV AC / VAL => AC",
 
     "VAI",
     "VAI SE Z = 1",
