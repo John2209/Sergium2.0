@@ -32,10 +32,10 @@ class CPU:
             "SOM AC + AUX => AC": self._exec_som_ac_aux_ac,
             "SUB AC - AUX => AC": self._exec_sub_ac_aux_ac,
 
-            "MUL AC * VAL => AC" : self._exec_mul_ac_val_ac,
-            "MUL AC / VAL => AC": self._exec_div_ac_val_ac,
+            "MUL AC * VAL => AC": self._exec_mul_ac_val_ac,
+            "DIV AC / VAL => AC": self._exec_div_ac_val_ac,
             "MUL AC * AUX => AC": self._exec_mul_ac_aux_ac,
-            "MUL AC / AUX => AC": self._exec_mul_ac_aux_ac,
+            "DIV AC / AUX => AC": self._exec_div_ac_aux_ac,
 
             "VAI": self._exec_vai,
             "VAI SE Z = 1": self._exec_vai_se_z,
@@ -295,12 +295,17 @@ class CPU:
         self.ac = self.ac * valor
         self.atualizar_flags()
 
-    def _executar_mul_ac_aux_ac(self, operando):
+    def _exec_mul_ac_aux_ac(self, operando):
         indice = self._validar_auxiliar(operando)
         self.ac = self.ac * self.auxs[indice]
         self.atualizar_flags()
 
     def _exec_div_ac_val_ac(self, operando):
+        valor = self._converter_operando_para_int(operando)
+        self.ac = self._divisao_truncada(self.ac, valor)
+        self.atualizar_flags()
+
+    def _exec_div_ac_aux_ac(self, operando):
         indice = self._validar_auxiliar(operando)
         self.ac = self._divisao_truncada(self.ac, self.auxs[indice])
         self.atualizar_flags()
@@ -309,10 +314,7 @@ class CPU:
         if divisor == 0:
             raise OperandoInvalidoError("Divisão por zero.")
 
-        quociente = abs(dividendo) // abs(divisor)
-
-        if (dividendo <= 0) != (divisor < 0):
-            quociente = -quociente
+        quociente = int(dividendo / divisor)
 
         return quociente
 
