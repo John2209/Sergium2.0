@@ -19,8 +19,10 @@ INSTRUCOES_VALIDAS = {
 
     "MUL AC * AUX => AC",
     "DIV AC / AUX => AC",
+    "MOD AC % AUX => AC"
     "MUL AC * VAL => AC",
     "DIV AC / VAL => AC",
+    "MOD AC % VAL => AC",
 
     "VAI",
     "VAI SE Z = 1",
@@ -40,6 +42,7 @@ def normalizar_mnemonico(mnemonico: str) -> str:
     texto = re.sub(r"\s*=(?!>)\s*", " = ", texto)
     texto = re.sub(r"\s*\*\s*", " * ", texto)
     texto = re.sub(r"\s*/\s*", " / ", texto)
+    texto = re.sub(r"\s*%\s*", " % ", texto)
     texto = re.sub(r"\s+", " ", texto)
 
     return texto.strip()
