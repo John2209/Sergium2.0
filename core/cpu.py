@@ -32,6 +32,11 @@ class CPU:
             "SOM AC + AUX => AC": self._exec_som_ac_aux_ac,
             "SUB AC - AUX => AC": self._exec_sub_ac_aux_ac,
 
+            "MUL AC * VAL => AC" : self._exec_mul_ac_val_ac,
+            "MUL AC / VAL => AC": self._exec_div_ac_val_ac,
+            "MUL AC * AUX => AC": self._exec_mul_ac_aux_ac,
+            "MUL AC / AUX => AC": self._exec_mul_ac_aux_ac,
+
             "VAI": self._exec_vai,
             "VAI SE Z = 1": self._exec_vai_se_z,
             "VAI SE P = 1": self._exec_vai_se_p,
@@ -279,6 +284,16 @@ class CPU:
     def _exec_sub_ac_aux_ac(self, operando):
         indice = self._validar_auxiliar(operando)
         self.ac = self.ac - self.auxs[indice]
+        self.atualizar_flags()
+
+    def _exec_mul_ac_val_ac(self, operando):
+        valor = self._converter_operando_para_int(operando)
+        self.ac = self.ac * valor
+        self.atualizar_flags()
+
+    def _executar_mul_ac_aux_ac(self, operando):
+        indice = self._validar_auxiliar(operando)
+        self.ac = self.ac * self.auxs[indice]
         self.atualizar_flags()
 
 
