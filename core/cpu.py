@@ -314,7 +314,10 @@ class CPU:
         if divisor == 0:
             raise OperandoInvalidoError("Divisão por zero.")
 
-        quociente = int(dividendo / divisor)
+        quociente = abs(dividendo) // abs(divisor)
+
+        if (dividendo < 0) != (divisor < 0):
+            quociente = -quociente
 
         return quociente
 
