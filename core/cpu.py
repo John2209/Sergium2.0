@@ -34,8 +34,10 @@ class CPU:
 
             "MUL AC * VAL => AC": self._exec_mul_ac_val_ac,
             "DIV AC / VAL => AC": self._exec_div_ac_val_ac,
+            "MOD AC % VAL => AC": self._exec_mod_ac_val_ac,
             "MUL AC * AUX => AC": self._exec_mul_ac_aux_ac,
             "DIV AC / AUX => AC": self._exec_div_ac_aux_ac,
+            "MOD AC % AUX => AC": self._exec_mod_ac_aux_ac,
 
             "VAI": self._exec_vai,
             "VAI SE Z = 1": self._exec_vai_se_z,
@@ -264,7 +266,7 @@ class CPU:
 
 
     # ============================
-    # OPERAÇÕES ARITMÉTICAS (+|-)
+    # OPERAÇÕES ARITMÉTICAS (+, -)
     # ============================
     def _exec_som_ac_val_ac(self, operando):
         valor = self._converter_operando_para_int(operando)
@@ -288,7 +290,7 @@ class CPU:
 
 
     # ============================
-    # OPERAÇÕES ARITMÉTICAS (*|/)
+    # OPERAÇÕES ARITMÉTICAS (*, /, %)
     # ============================
     def _exec_mul_ac_val_ac(self, operando):
         valor = self._converter_operando_para_int(operando)
@@ -310,6 +312,16 @@ class CPU:
         self.ac = self._divisao_truncada(self.ac, self.auxs[indice])
         self.atualizar_flags()
 
+    def _exec_mod_ac_val_ac(self, operando):
+        valor = self._converter_operando_para_int(operando)
+        self.ac = self._modulo_truncado(self.ac, valor)
+        self.atualizar_flags()
+
+    def _exec_mod_ac_aux_ac(self, operando):
+        indice = self._validar_auxiliar(operando)
+        self.ac = self._modulo_truncado(self.ac, self.auxs[indice])
+        self.atualizar_flags()
+
     def _divisao_truncada(self, dividendo, divisor):
         if divisor == 0:
             raise OperandoInvalidoError("Divisão por zero.")
@@ -320,6 +332,13 @@ class CPU:
             quociente = -quociente
 
         return quociente
+
+    def _modulo_truncado(self, dividendo, divisor):
+        if divisor == 0:
+            raise OperandoInvalidoError("Módulo por zero.")
+
+        quociente = self._divisao_truncada(dividendo, divisor)
+        return dividendo - divisor * quociente
 
 
     # ====================
