@@ -19,7 +19,7 @@ INSTRUCOES_VALIDAS = {
 
     "MUL AC * AUX => AC",
     "DIV AC / AUX => AC",
-    "MOD AC % AUX => AC"
+    "MOD AC % AUX => AC",
     "MUL AC * VAL => AC",
     "DIV AC / VAL => AC",
     "MOD AC % VAL => AC",
