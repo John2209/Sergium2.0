@@ -263,9 +263,9 @@ class CPU:
         self.ac = self.mem[endereco]
 
 
-    # ======================
-    # OPERAÇÕES ARITMÉTICAS
-    # ======================
+    # ============================
+    # OPERAÇÕES ARITMÉTICAS (+|-)
+    # ============================
     def _exec_som_ac_val_ac(self, operando):
         valor = self._converter_operando_para_int(operando)
         self.ac = self.ac + valor
@@ -286,6 +286,10 @@ class CPU:
         self.ac = self.ac - self.auxs[indice]
         self.atualizar_flags()
 
+
+    # ============================
+    # OPERAÇÕES ARITMÉTICAS (*|/)
+    # ============================
     def _exec_mul_ac_val_ac(self, operando):
         valor = self._converter_operando_para_int(operando)
         self.ac = self.ac * valor
@@ -295,6 +299,22 @@ class CPU:
         indice = self._validar_auxiliar(operando)
         self.ac = self.ac * self.auxs[indice]
         self.atualizar_flags()
+
+    def _exec_div_ac_val_ac(self, operando):
+        indice = self._validar_auxiliar(operando)
+        self.ac = self._divisao_truncada(self.ac, self.auxs[indice])
+        self.atualizar_flags()
+
+    def _divisao_truncada(self, dividendo, divisor):
+        if divisor == 0:
+            raise OperandoInvalidoError("Divisão por zero.")
+
+        quociente = abs(dividendo) // abs(divisor)
+
+        if (dividendo <= 0) != (divisor < 0):
+            quociente = -quociente
+
+        return quociente
 
 
     # ====================
