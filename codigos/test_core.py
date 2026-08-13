@@ -1,5 +1,4 @@
 import sys
-from math import trunc
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -45,6 +44,20 @@ def criar_arquivo_teste(nome_arquivo, conteudo, encoding="utf-8"):
     caminho.write_text(conteudo, encoding=encoding)
 
     return caminho
+
+
+def divisao_truncada_esperada(dividendo, divisor):
+    quociente = abs(dividendo) // abs(divisor)
+
+    if (dividendo < 0) != (divisor < 0):
+        quociente = -quociente
+
+    return quociente
+
+
+def modulo_truncado_esperado(dividendo, divisor):
+    quociente = divisao_truncada_esperada(dividendo, divisor)
+    return dividendo - divisor * quociente
 
 
 # =========================
@@ -129,11 +142,45 @@ def teste_matriz_multiplicacao_divisao_e_flags():
                     cpu.auxs[3] = valor_auxiliar
 
                 cpu.executar_instrucao()
-                esperado = trunc(ac / divisor)
+                esperado = divisao_truncada_esperada(ac, divisor)
 
                 assert cpu.ac == esperado
                 assert cpu.z == int(esperado == 0)
                 assert cpu.p == int(esperado > 0)
+                assert cpu.finalizado is True
+
+
+def teste_matriz_modulo_e_flags():
+    for ac in range(-20, 21):
+        for divisor in range(-10, 11):
+            if divisor == 0:
+                continue
+
+            casos = (
+                ("MOD AC % VAL => AC", str(divisor), None),
+                ("MOD AC % AUX => AC", "2", divisor),
+            )
+
+            for mnemonico, operando, valor_auxiliar in casos:
+                cpu = CPU()
+                cpu.carregar_programa({"0": (mnemonico, operando)})
+                cpu.ac = ac
+
+                if valor_auxiliar is not None:
+                    cpu.auxs[2] = valor_auxiliar
+
+                cpu.executar_instrucao()
+                esperado = modulo_truncado_esperado(ac, divisor)
+
+                assert cpu.ac == esperado
+                assert cpu.z == int(esperado == 0)
+                assert cpu.p == int(esperado > 0)
+                assert abs(cpu.ac) < abs(divisor)
+
+                if cpu.ac != 0:
+                    assert (cpu.ac > 0) == (ac > 0)
+
+                assert ac == divisor * divisao_truncada_esperada(ac, divisor) + cpu.ac
                 assert cpu.finalizado is True
 
 
@@ -157,6 +204,26 @@ def teste_divisao_inteiros_muito_grandes():
         assert cpu.ac == esperado
 
 
+def teste_modulo_inteiros_muito_grandes():
+    valor = 10 ** 1000 + 987654321
+    casos = (
+        (valor, 97),
+        (-valor, 97),
+        (valor, -97),
+        (-valor, -97),
+    )
+
+    for dividendo, divisor in casos:
+        cpu = CPU()
+        cpu.carregar_programa({"0": ("MOD AC % VAL => AC", str(divisor))})
+        cpu.ac = dividendo
+        cpu.executar_instrucao()
+
+        esperado = modulo_truncado_esperado(dividendo, divisor)
+        assert cpu.ac == esperado
+        assert abs(cpu.ac) < abs(divisor)
+
+
 def teste_divisao_por_zero_val_e_aux():
     casos = (
         ("DIV AC / VAL => AC", "0", None),
@@ -177,17 +244,49 @@ def teste_divisao_por_zero_val_e_aux():
         assert cpu.finalizado is False
 
 
+def teste_modulo_por_zero_val_e_aux():
+    casos = (
+        ("MOD AC % VAL => AC", "0", None),
+        ("MOD AC % AUX => AC", "1", 0),
+    )
+
+    for mnemonico, operando, valor_auxiliar in casos:
+        cpu = CPU()
+        cpu.carregar_programa({"0": (mnemonico, operando)})
+        cpu.ac = 99
+
+        if valor_auxiliar is not None:
+            cpu.auxs[1] = valor_auxiliar
+
+        assert_lanca(OperandoInvalidoError, cpu.executar_instrucao)
+        assert cpu.ac == 99
+        assert cpu.pc == 0
+        assert cpu.finalizado is False
+
+
 def teste_novas_operacoes_rejeitam_operandos_invalidos():
-    for mnemonico in ("MUL AC * VAL => AC", "DIV AC / VAL => AC"):
+    for mnemonico in (
+        "MUL AC * VAL => AC",
+        "DIV AC / VAL => AC",
+        "MOD AC % VAL => AC",
+    ):
         cpu = CPU()
         cpu.carregar_programa({"0": (mnemonico, "ABC")})
         assert_lanca(OperandoInvalidoError, cpu.executar_instrucao)
 
-    for mnemonico in ("MUL AC * AUX => AC", "DIV AC / AUX => AC"):
+    for mnemonico in (
+        "MUL AC * AUX => AC",
+        "DIV AC / AUX => AC",
+        "MOD AC % AUX => AC",
+    ):
         for indice in ("-1", "4"):
             cpu = CPU()
             cpu.carregar_programa({"0": (mnemonico, indice)})
             assert_lanca(AuxiliarInvalidoError, cpu.executar_instrucao)
+
+        cpu = CPU()
+        cpu.carregar_programa({"0": (mnemonico, "ABC")})
+        assert_lanca(OperandoInvalidoError, cpu.executar_instrucao)
 
 
 def teste_desvio_condicional():
@@ -469,7 +568,7 @@ def teste_parser_com_cpu():
 
 def teste_parser_executa_todas_novas_instrucoes():
     caminho = criar_arquivo_teste(
-        "test_parser_mul_div.txt",
+        "test_parser_mul_div_mod.txt",
         """
         | COP VAL => AC | 7
         | MUL AC*VAL=>AC | -3
@@ -478,6 +577,8 @@ def teste_parser_executa_todas_novas_instrucoes():
         | DIV AC/AUX=>AC | 0
         | MUL AC*AUX=>AC | 0
         | DIV AC/VAL=>AC | 5
+        | MOD AC%VAL=>AC | 7
+        | MOD AC%AUX=>AC | 0
         | SAI AC => PORTA | 2
         | PARA | 0
         """,
@@ -491,14 +592,16 @@ def teste_parser_executa_todas_novas_instrucoes():
         "DIV AC / AUX => AC",
         "MUL AC * VAL => AC",
         "DIV AC / VAL => AC",
+        "MOD AC % AUX => AC",
+        "MOD AC % VAL => AC",
     } <= mnemonicos
 
     cpu = CPU()
     cpu.carregar_programa(programa)
     cpu.executar_tudo()
 
-    assert cpu.ac == 16
-    assert cpu.consumir_saidas() == [16]
+    assert cpu.ac == 2
+    assert cpu.consumir_saidas() == [2]
     assert cpu.z == 0
     assert cpu.p == 1
     assert cpu.finalizado is True
@@ -655,6 +758,8 @@ def teste_normalizar_mnemonico():
     assert normalizar_mnemonico("SOM AC+VAL=>AC") == "SOM AC + VAL => AC"
     assert normalizar_mnemonico("mul ac*aux=>ac") == "MUL AC * AUX => AC"
     assert normalizar_mnemonico("DIV AC/VAL=>AC") == "DIV AC / VAL => AC"
+    assert normalizar_mnemonico("mod ac%aux=>ac") == "MOD AC % AUX => AC"
+    assert normalizar_mnemonico("MOD AC%VAL=>AC") == "MOD AC % VAL => AC"
     assert normalizar_mnemonico("vai se z=1") == "VAI SE Z = 1"
 
 
@@ -663,6 +768,8 @@ def teste_instrucao_existe():
     assert instrucao_existe("SOM AC+VAL=>AC") is True
     assert instrucao_existe("MUL AC*AUX=>AC") is True
     assert instrucao_existe("DIV AC/VAL=>AC") is True
+    assert instrucao_existe("MOD AC%AUX=>AC") is True
+    assert instrucao_existe("MOD AC%VAL=>AC") is True
     assert instrucao_existe("banana") is False
 
 
@@ -758,8 +865,11 @@ TESTES = [
     ("teste_copia_aritmetica_saida", teste_copia_aritmetica_saida),
     ("teste_flags_zero", teste_flags_zero),
     ("teste_matriz_multiplicacao_divisao_e_flags", teste_matriz_multiplicacao_divisao_e_flags),
+    ("teste_matriz_modulo_e_flags", teste_matriz_modulo_e_flags),
     ("teste_divisao_inteiros_muito_grandes", teste_divisao_inteiros_muito_grandes),
+    ("teste_modulo_inteiros_muito_grandes", teste_modulo_inteiros_muito_grandes),
     ("teste_divisao_por_zero_val_e_aux", teste_divisao_por_zero_val_e_aux),
+    ("teste_modulo_por_zero_val_e_aux", teste_modulo_por_zero_val_e_aux),
     ("teste_novas_operacoes_rejeitam_operandos_invalidos", teste_novas_operacoes_rejeitam_operandos_invalidos),
     ("teste_desvio_condicional", teste_desvio_condicional),
     ("teste_entrada_saida", teste_entrada_saida),
