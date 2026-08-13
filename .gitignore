@@ -1,9 +1,9 @@
-# Ambientes Virtuais
+# Ambientes virtuais
 venv/
 env/
 .venv/
 
-# Python (Compilados e Cache)
+# Python (compilados e cache)
 __pycache__/
 *.pyc
 *.pyo
@@ -11,7 +11,7 @@ __pycache__/
 .pytest_cache/
 .coverage
 
-# Distribuição e Build
+# Distribuição e build
 dist/
 build/
 *.egg-info/
@@ -20,12 +20,11 @@ build/
 .vscode/
 .idea/
 
-# Arquivos de Sistema e Segurança
+# Arquivos de sistema e segurança
 .env
 *.Identifier
 .DS_Store
 Thumbs.db
 
-# Pasta de PDFs e códigos
+# Pasta de PDFs
 PDFs/
-#examples/
