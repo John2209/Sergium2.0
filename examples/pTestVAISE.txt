@@ -1,5 +1,0 @@
- | COP VAL => AC | 3
- | SUB AC - VAL => AC | 10
- | VAI SE P = 1 | positivo
- | COP VAL => AC | 999
-positivo | PARA | 0
