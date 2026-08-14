@@ -14,15 +14,25 @@ class Parser:
         self.instrucoes = {}    # limpa instruções anteriores caso o mesmo Parser seja reutilizado
         self.linhas_origem = {}
 
-        with open(self.caminho_arquivo, 'r') as arquivo:    # abre o arquivo no modo leitura
+        with open(self.caminho_arquivo, 'r', encoding='utf-8-sig') as arquivo:    # abre arquivos UTF-8, com ou sem BOM
             conteudo = arquivo.read()                       # transforma o conteúdo do arquivo em uma string
             linhas = conteudo.splitlines()                  # transforma a string em uma lista de linhas
 
             linhas_validas = []                             # lista com as linhas válidas e seus números originais no arquivo
 
             for numero_linha, linha in enumerate(linhas, start=1):      # percorre as linhas do arquivo começando em 1
-                if '|' in linha:                                        # se houver '|', a linha tem formato de instrução
-                    linhas_validas.append((numero_linha, linha))        # guarda o número real da linha junto com o texto
+                linha_sem_espacos = linha.strip()
+
+                if not linha_sem_espacos or linha_sem_espacos.startswith('#'):
+                    continue                                             # ignora linhas vazias e comentários completos
+
+                if '|' not in linha:
+                    raise ParserError(f"Linha {numero_linha} inválida: {linha}")
+
+                linhas_validas.append((numero_linha, linha))             # guarda o número real da linha junto com o texto
+
+            if not linhas_validas:
+                raise ParserError("O programa não contém instruções.")
 
             for i, (numero_linha, linha) in enumerate(linhas_validas):  # percorre as instruções válidas em ordem
                 partes = linha.split('|')                               # separa em: rótulo | mnemônico | operando
