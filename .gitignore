@@ -28,3 +28,6 @@ Thumbs.db
 
 # Pasta de PDFs
 PDFs/
+
+# Executáveis
+*.exe
