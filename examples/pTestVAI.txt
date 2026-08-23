@@ -1,4 +1,0 @@
- | COP VAL => AC | 10
- | VAI | fim
- | COP VAL => AC | 999
-fim | PARA | 0

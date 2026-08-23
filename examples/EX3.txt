@@ -1,9 +1,0 @@
- | ENT PORTA => AC | 0
- | SOM AC + VAL => AC | 0
- | VAI SE Z = 1 | caso2
-caso1 | COP VAL => AC | 111
- | SAI AC => PORTA | 2
- | PARA | 0
-caso2 | COP VAL => AC | 999
- | SAI AC => PORTA | 2
- | PARA | 0
