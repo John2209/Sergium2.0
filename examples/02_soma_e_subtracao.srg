@@ -1,0 +1,21 @@
+# Testa SOM e SUB com VAL e AUX
+
+# Guarda 10 no AUX0 e 4 no AUX1
+| COP VAL => AC | 10
+| COP AC => AUX | 0
+| COP VAL => AC | 4
+| COP AC => AUX | 1
+
+# Soma e subtração com valor
+| COP AUX => AC | 0
+| SOM AC + VAL => AC | 5
+| SAI AC => PORTA | 2
+| SUB AC - VAL => AC | 3
+| SAI AC => PORTA | 2
+
+# Soma e subtração com auxiliar
+| SOM AC + AUX => AC | 1
+| SAI AC => PORTA | 2
+| SUB AC - AUX => AC | 0
+| SAI AC => PORTA | 2
+| PARA | 0

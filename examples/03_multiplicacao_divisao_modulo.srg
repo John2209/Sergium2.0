@@ -1,0 +1,24 @@
+# Testa MUL, DIV e MOD com VAL e AUX
+
+# Guarda o divisor 5 no AUX0
+| COP VAL => AC | 5
+| COP AC => AUX | 0
+
+# Operações com valor
+| COP VAL => AC | 42
+| MUL AC * VAL => AC | 2
+| SAI AC => PORTA | 2
+| DIV AC / VAL => AC | 5
+| SAI AC => PORTA | 2
+| MOD AC % VAL => AC | 6
+| SAI AC => PORTA | 2
+
+# Operações com auxiliar
+| COP VAL => AC | 7
+| MUL AC * AUX => AC | 0
+| SAI AC => PORTA | 2
+| DIV AC / AUX => AC | 0
+| SAI AC => PORTA | 2
+| MOD AC % AUX => AC | 0
+| SAI AC => PORTA | 2
+| PARA | 0

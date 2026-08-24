@@ -1,0 +1,17 @@
+# Testa divisão e módulo com números negativos
+
+# -17 / 5 = -3. O resto é -2.
+| COP VAL => AC | -17
+| DIV AC / VAL => AC | 5
+| SAI AC => PORTA | 2
+| COP VAL => AC | -17
+| MOD AC % VAL => AC | 5
+| SAI AC => PORTA | 2
+
+| COP VAL => AC | 17
+| DIV AC / VAL => AC | -5
+| SAI AC => PORTA | 2
+| COP VAL => AC | 17
+| MOD AC % VAL => AC | -5
+| SAI AC => PORTA | 2
+| PARA | 0

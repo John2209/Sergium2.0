@@ -1,0 +1,46 @@
+# Usa todas as instruções válidas do Sergium
+
+# Guarda os dois valores.
+| ENT PORTA => AC | 0
+| COP AC => AUX | 0
+| COP AC => MEM | 20
+| ENT PORTA => AC | 0
+| COP AC => AUX | 1
+
+# Recupera o primeiro valor e usa as cópias
+| COP MEM => AC | 20
+| COP AC => AUX | 2
+| COP AUX => AC | 2
+
+# Usa SOM, SUB, MUL, DIV e MOD com VAL e AUX
+| SOM AC + AUX => AC | 1
+| SUB AC - VAL => AC | 1
+| MUL AC * VAL => AC | 2
+| DIV AC / AUX => AC | 1
+| MOD AC % VAL => AC | 4
+| SOM AC + VAL => AC | 1
+| SUB AC - AUX => AC | 1
+
+# O resultado é zero, então Z desvia para zero
+| VAI SE Z = 1 | zero
+| COP VAL => AC | 999
+| VAI | fim
+
+# Usa MUL, DIV e MOD com AUX
+zero | COP VAL => AC | 3
+| MUL AC * AUX => AC | 1
+| DIV AC / VAL => AC | 2
+| MOD AC % AUX => AC | 1
+| SOM AC + VAL => AC | 4
+
+# O resultado é positivo, então P desvia para positivo
+| VAI SE P = 1 | positivo
+| COP VAL => AC | 999
+| VAI | fim
+
+# Guarda e recupera o resultado antes da saída
+positivo | COP AC => MEM | 21
+| COP MEM => AC | 21
+| SAI AC => PORTA | 2
+| VAI | fim
+fim | PARA | 0

@@ -1,0 +1,35 @@
+# Mostra o maior número e a diferença
+
+# Guarda o primeiro número na memória
+| ENT PORTA => AC | 0
+| COP AC => MEM | 10
+
+# Guarda o segundo número no AUX1
+| ENT PORTA => AC | 0
+| COP AC => AUX | 1
+
+# Recupera o primeiro número e compara os dois
+| COP MEM => AC | 10
+| COP AC => AUX | 0
+| SUB AC - AUX => AC | 1
+| VAI SE Z = 1 | iguais
+| VAI SE P = 1 | maior_primeiro
+
+# O segundo número é maior
+maior_segundo | COP AUX => AC | 1
+| SAI AC => PORTA | 2
+| SUB AC - AUX => AC | 0
+| SAI AC => PORTA | 2
+| VAI | fim
+
+# O primeiro número é maior
+maior_primeiro | COP AUX => AC | 0
+| SAI AC => PORTA | 2
+| SUB AC - AUX => AC | 1
+| SAI AC => PORTA | 2
+| VAI | fim
+
+# Os números são iguais
+iguais | COP VAL => AC | 0
+| SAI AC => PORTA | 2
+fim | PARA | 0

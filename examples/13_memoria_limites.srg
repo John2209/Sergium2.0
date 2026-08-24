@@ -1,0 +1,14 @@
+# Testa os primeiros e últimos endereços da memória
+
+# Grava nos endereços 0 e 255
+| COP VAL => AC | 12
+| COP AC => MEM | 0
+| COP VAL => AC | 34
+| COP AC => MEM | 255
+
+# Lê os dois endereços
+| COP MEM => AC | 0
+| SAI AC => PORTA | 2
+| COP MEM => AC | 255
+| SAI AC => PORTA | 2
+| PARA | 0

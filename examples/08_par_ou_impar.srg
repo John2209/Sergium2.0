@@ -1,0 +1,13 @@
+# Mostra se o número é par ou ímpar
+
+| ENT PORTA => AC | 0
+| MOD AC % VAL => AC | 2
+| VAI SE Z = 1 | par
+
+impar | COP VAL => AC | 1
+| SAI AC => PORTA | 2
+| VAI | fim
+
+par | COP VAL => AC | 0
+| SAI AC => PORTA | 2
+fim | PARA | 0

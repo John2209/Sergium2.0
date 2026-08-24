@@ -1,0 +1,10 @@
+# Testa o desvio VAI
+
+inicio | COP VAL => AC | 10
+| VAI | fim
+
+# Esta linha deve ser ignorada
+| COP VAL => AC | 999
+
+fim | SAI AC => PORTA | 2
+| PARA | 0

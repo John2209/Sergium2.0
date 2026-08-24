@@ -1,0 +1,25 @@
+# Calcula o fatorial de um número
+
+# AUX0 guarda o contador
+# AUX1 guarda o resultado
+| ENT PORTA => AC | 0
+| COP AC => AUX | 0
+| COP VAL => AC | 1
+| COP AC => AUX | 1
+
+loop | COP AUX => AC | 0
+| SOM AC + VAL => AC | 0
+| VAI SE P = 1 | multiplica
+| VAI | fim
+
+multiplica | COP AUX => AC | 1
+| MUL AC * AUX => AC | 0
+| COP AC => AUX | 1
+| COP AUX => AC | 0
+| SUB AC - VAL => AC | 1
+| COP AC => AUX | 0
+| VAI | loop
+
+fim | COP AUX => AC | 1
+| SAI AC => PORTA | 2
+| PARA | 0

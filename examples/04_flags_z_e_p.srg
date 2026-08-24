@@ -1,0 +1,25 @@
+# Testa Z, P e resultado negativo
+
+# 10 - 10 gera zero: Z = 1 e P = 0
+| COP VAL => AC | 10
+| SUB AC - VAL => AC | 10
+| VAI SE Z = 1 | zero
+| COP VAL => AC | 999
+| VAI | fim
+
+# 0 + 4 gera positivo: Z = 0 e P = 1
+zero | SOM AC + VAL => AC | 4
+| VAI SE P = 1 | positivo
+| COP VAL => AC | 999
+| VAI | fim
+
+# 4 - 9 gera negativo: Z = 0 e P = 0
+positivo | SUB AC - VAL => AC | 9
+| VAI SE Z = 1 | erro
+| VAI SE P = 1 | erro
+| SAI AC => PORTA | 2
+| VAI | fim
+
+erro | COP VAL => AC | 999
+| SAI AC => PORTA | 2
+fim | PARA | 0

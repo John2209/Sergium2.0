@@ -1,0 +1,21 @@
+# Testa as cópias entre AC, AUX e MEM
+
+# Guarda 42 no AUX0
+| COP VAL => AC | 42
+| COP AC => AUX | 0
+
+# Recupera o valor do AUX0 e guarda na memória
+| COP AUX => AC | 0
+| COP AC => MEM | 10
+
+# Altera o AC para provar que as cópias foram guardadas
+| COP VAL => AC | 0
+
+# Lê o AUX0
+| COP AUX => AC | 0
+| SAI AC => PORTA | 2
+
+# Lê a memória
+| COP MEM => AC | 10
+| SAI AC => PORTA | 2
+| PARA | 0

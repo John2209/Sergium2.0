@@ -1,0 +1,11 @@
+# Conta de 5 até 1
+
+| COP VAL => AC | 5
+| COP AC => AUX | 0
+
+loop | COP AUX => AC | 0
+| SAI AC => PORTA | 2
+| SUB AC - VAL => AC | 1
+| COP AC => AUX | 0
+| VAI SE P = 1 | loop
+| PARA | 0
