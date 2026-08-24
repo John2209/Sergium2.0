@@ -26,8 +26,10 @@ build/
 .DS_Store
 Thumbs.db
 
-# Pasta de PDFs
+# Pasta de PDFs e documentos
 PDFs/
+*.pdf
+*.docx
 
 # Executáveis
 *.exe
