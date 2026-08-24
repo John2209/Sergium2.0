@@ -188,6 +188,16 @@ class App(ctk.CTk):
             state="disabled",
         )
 
+        self.botao_help = ctk.CTkButton(
+            self.toolbar,
+            text="Help",
+            width=80,
+            height=28,
+            corner_radius=8,
+            fg_color=cor_botao,
+            hover_color=cor_botao_hover,
+        )
+
         # =========================
         # painéis
         # =========================
@@ -251,6 +261,16 @@ class App(ctk.CTk):
         self.botao_run.grid(row=0, column=3, padx=4, pady=8)
         self.botao_step.grid(row=0, column=4, padx=4, pady=8)
         self.botao_reset.grid(row=0, column=5, padx=4, pady=8)
+
+        self.toolbar.grid_columnconfigure(6, weight=1)
+
+        self.botao_help.grid(
+            row=0,
+            column=7,
+            padx=(4, 8),
+            pady=8
+        )
+
 
         # =========================
         # layout da área principal
@@ -405,6 +425,7 @@ class App(ctk.CTk):
         self.botao_run   .configure(command=self._acao_run)
         self.botao_step  .configure(command=self._acao_step)
         self.botao_reset .configure(command=self._acao_reset)
+        self.botao_help  .configure(command=self._acao_help)
 
 
     def _atualizar_estado_botoes(self):
@@ -767,7 +788,12 @@ class App(ctk.CTk):
             self._atualizar_ui()
             self._atualizar_estado_botoes()
 
+    def _acao_help(self):
+        print("Help")
 
+    # =============================================
+    # ações
+    # =============================================
     def _acao_entrada(self, valor: str):
         """chamado pelo terminal quando o usuário envia um valor de entrada"""
         try:
